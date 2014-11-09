@@ -1,0 +1,19 @@
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata
+
+#other stuff
+*.log
+*.bak
+dependecny-reduced-pom.xml
+jars
+
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/
