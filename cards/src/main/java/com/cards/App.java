@@ -9,7 +9,6 @@ public class App
     public static void main( String[] args )
     {
         new Server();
-        System.out.println("**Server Started**");
         
         Scanner scanner = new Scanner(System.in);
         scanner.nextLine();

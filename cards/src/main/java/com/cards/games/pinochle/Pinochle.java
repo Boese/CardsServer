@@ -25,11 +25,8 @@ import com.cards.games.pinochle.utils.GameStateObserver;
 import com.cards.games.pinochle.utils.GameStateSubject;
 import com.cards.games.pinochle.utils.PinochleMessage;
 import com.cards.games.pinochle.utils.iPinochleState;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-@JsonAutoDetect
 public class Pinochle implements GameStateSubject, iPinochleState{
 	
 	//** Class Variables
