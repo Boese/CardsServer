@@ -1,0 +1,77 @@
+package com.cards.games.pinochle.states;
+
+import static java.util.Arrays.asList;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.json.JSONObject;
+
+import com.cards.games.pinochle.Pinochle;
+import com.cards.games.pinochle.enums.Card;
+import com.cards.games.pinochle.enums.Face;
+import com.cards.games.pinochle.enums.Suit;
+import com.cards.games.pinochle.player.Player;
+import com.cards.games.pinochle.utils.iPinochleState;
+
+
+public class Deal implements iPinochleState {
+	Pinochle mP;
+	public Deal(Pinochle p){
+		this.mP = p;
+	}
+	@Override
+	public void Play(JSONObject response) {
+		mP.setCurrentMessage("Dealing...");
+		deal();
+		mP.notifyObservers();
+		
+		if(!checkForNines()) {
+			((Bid) mP.getBidState()).startBid();
+			mP.setState(mP.getBidState());
+		}
+		else {
+			mP.setCurrentMessage("Re-dealing... One Player got 5 Nines and no meld!");
+			mP.notifyObservers();
+		}
+		
+		mP.Play(null);
+	}
+	
+	private void deal() {
+		final List<Suit> suits = asList(Suit.Hearts,Suit.Diamonds,Suit.Spades,Suit.Clubs);
+		final List<Face> faces = asList(Face.Nine,Face.Jack,Face.Queen,Face.King,Face.Ten,Face.Ace);
+		
+		List<Card> deck = new ArrayList<Card>(48);
+		
+		// Fill new Pinochle deck
+		for (int i = 0; i < 2; i++) {	// 2 of each card *
+			for (Suit suit : suits) {	// 4 of each suit *
+				for (Face face : faces) {	// 6 of each face = 48 cards
+					deck.add(new Card(suit,face));
+				}
+			}
+		}
+		// Shuffle deck
+		Collections.shuffle(deck);
+		
+		// Deal out 12 cards to each player
+		int from = 0;
+		int to = 12;
+		for (Player player : mP.getPlayers()) {
+			player.setCards(deck.subList(from, to));
+			from += 12;
+			to += 12;
+		}
+	}
+	
+	private boolean checkForNines() {
+		boolean result = false;
+		for (Player p : mP.getPlayers()) {
+			if(p.containsFiveNinesNoMeld())
+				result = true;
+		}
+		return result;
+	}
+}
