@@ -1,5 +1,7 @@
 package com.cards.server;
 
+import com.cards.utils.UserState;
+
 import naga.NIOSocket;
 import naga.SocketObserver;
 import naga.eventmachine.DelayedEvent;
@@ -9,10 +11,13 @@ import naga.packetwriter.AsciiLinePacketWriter;
 public class User implements SocketObserver {
 	private final NIOSocket socket;
     private DelayedEvent disconnectEvent;
+    private UserRouter router;
+    private UserState state;
     
     User(NIOSocket socket)
     {
         this.socket = socket;
+        this.state = UserState.Login;
         this.socket.setPacketReader(new AsciiLinePacketReader());
         this.socket.setPacketWriter(new AsciiLinePacketWriter());
         this.socket.listen(this);
@@ -22,16 +27,18 @@ public class User implements SocketObserver {
 	public void connectionBroken(NIOSocket socket, Exception e) {
 		System.out.println("socket disconnected on : " + socket.getPort());
 		socket.closeAfterWrite();
+		UserManager.getInstance().removeUser(this);
 	}
 
 	@Override
 	public void connectionOpened(NIOSocket socket) {
 		System.out.println("socket connected on : " + socket.getPort());
+		router.routeUser(this, null);
 	}
 
 	@Override
 	public void packetReceived(NIOSocket socket, byte[] packet) {
-		//Send to MessageHandler
+		router.routeUser(this, new String(packet));
 	}
 
 	@Override
@@ -57,5 +64,13 @@ public class User implements SocketObserver {
 	
 	public void cancelTimeoutEvent() {
 		if(disconnectEvent != null) disconnectEvent.cancel();
+	}
+	
+	public void setUserState(UserState state) {
+		this.state = state;
+	}
+	
+	public UserState getUserState() {
+		return state;
 	}
 }
