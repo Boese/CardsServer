@@ -20,41 +20,25 @@ public class User implements SocketObserver {
     
 	@Override
 	public void connectionBroken(NIOSocket socket, Exception e) {
-		socket.closeAfterWrite();
 		System.out.println("socket disconnected on : " + socket.getPort());
+		socket.closeAfterWrite();
 	}
 
 	@Override
 	public void connectionOpened(NIOSocket socket) {
-		// We start by scheduling a disconnect event for the login.
-//        disconnectEvent = server.getEventMachine().executeLater(new Runnable()
-//        {
-//            public void run()
-//            {
-//                socket.write("Disconnecting due to inactivity".getBytes());
-//                socket.closeAfterWrite();
-//            }
-//        }, LOGIN_TIMEOUT);
-//
-//        // Send the request to log in.
-//        socket.write("Please enter your name:".getBytes());
 		System.out.println("socket connected on : " + socket.getPort());
-		socket.write(new String("connected").getBytes());
 	}
 
 	@Override
 	public void packetReceived(NIOSocket socket, byte[] packet) {
-		// Reset inactivity timer.
-        //scheduleInactivityEvent(5000);
-		socket.write(packet);
+		//Send to MessageHandler
 	}
 
 	@Override
 	public void packetSent(NIOSocket socket, Object packet) {
-		
 	}
 	
-	private void scheduleInactivityEvent(int INACTIVITY_TIMEOUT)
+	public void scheduleTimeoutEvent(int TIMEOUT)
     {
         // Cancel the last disconnect event, schedule another.
         if (disconnectEvent != null) disconnectEvent.cancel();
@@ -62,9 +46,12 @@ public class User implements SocketObserver {
         {
             public void run()
             {
-                socket.write("Disconnected due to inactivity.".getBytes());
                 socket.closeAfterWrite();
             }
-        }, INACTIVITY_TIMEOUT);
+        }, TIMEOUT);
     }
+	
+	public void cancelTimeoutEvent() {
+		if(disconnectEvent != null) disconnectEvent.cancel();
+	}
 }

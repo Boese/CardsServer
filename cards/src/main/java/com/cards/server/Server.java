@@ -32,6 +32,7 @@ public class Server implements ServerSocketObserver {
 		serversocket.listen(this);
 		serversocket.setConnectionAcceptor(ConnectionAcceptor.ALLOW);
 		eventmachine.start();
+			//Initialize UserManager
 		UserManager.getInstance().init(eventmachine);
 		}catch(Exception e) {
 			e.printStackTrace();
