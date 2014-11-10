@@ -10,7 +10,7 @@ public class UserManager {
 	private static final UserManager INSTANCE = new UserManager();
 	
 	public EventMachine eventmachine;
-	public MessageHandler messagehandler;
+	public UserRouter messagehandler;
 	private List<User> users;
 	
 	private UserManager() {}
@@ -21,7 +21,7 @@ public class UserManager {
 	
 	public void init(EventMachine eventmachine) {
 		this.eventmachine = eventmachine;
-		this.messagehandler = new MessageHandler();
+		this.messagehandler = new UserRouter();
 		this.users = new ArrayList<User>();
 	}
 	

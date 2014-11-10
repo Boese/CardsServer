@@ -38,6 +38,10 @@ public class User implements SocketObserver {
 	public void packetSent(NIOSocket socket, Object packet) {
 	}
 	
+	public void sendMessage(String message) {
+		socket.write(message.getBytes());
+	}
+	
 	public void scheduleTimeoutEvent(int TIMEOUT)
     {
         // Cancel the last disconnect event, schedule another.
