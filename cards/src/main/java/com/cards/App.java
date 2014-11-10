@@ -1,13 +1,20 @@
 package com.cards;
 
-/**
- * Hello world!
- *
- */
+import java.util.Scanner;
+
+import com.cards.server.Server;
+
 public class App 
 {
     public static void main( String[] args )
     {
-        System.out.println( "Hello World!" );
+        new Server();
+        System.out.println("**Server Started**");
+        
+        Scanner scanner = new Scanner(System.in);
+        scanner.nextLine();
+        System.out.println("**Server Terminated**");
+        scanner.close();
+        System.exit(0);
     }
 }
