@@ -1,0 +1,1 @@
+Game server for Cards platform
