@@ -62,7 +62,7 @@ public class UserRouter {
 	}
 	
 	private void SendSalt(User user) {
-		salt = BCrypt.gensalt();
+		salt = BCrypt.gensalt(12);
 		user.sendMessage("salt : " + salt);
 		user.setUserState(UserState.Login);
 	}
