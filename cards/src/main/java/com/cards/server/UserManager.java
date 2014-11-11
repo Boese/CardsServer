@@ -9,15 +9,15 @@ import naga.NIOSocket;
 import naga.eventmachine.EventMachine;
 
 public class UserManager {
-	private static final UserManager INSTANCE = new UserManager();
-	
-	public EventMachine eventmachine;
-	public UserRouter userrouter;
-	public MongoClient mongoclient;
-	private List<User> users;
-	// Games
-	
 	private UserManager() {}
+	
+	private static final UserManager INSTANCE = new UserManager();
+	private List<User> users;
+	
+	// Common
+	public EventMachine eventmachine;
+	
+	// Games
 	
 	public static UserManager getInstance() {
 		return INSTANCE;
@@ -26,7 +26,6 @@ public class UserManager {
 	// **Initialize**
 	public void init(EventMachine eventmachine) {
 		this.eventmachine = eventmachine;
-		this.userrouter = new UserRouter();
 		this.users = new ArrayList<User>();
 	}
 	
@@ -34,10 +33,12 @@ public class UserManager {
 	public void addUser(NIOSocket socket) {
 		User user = new User(socket);
 		users.add(user);
+		System.out.println("Number of users connected: " + users.size());
 	}
 	
 	public void removeUser(User user) {
 		users.remove(user);
+		System.out.println("Number of users connected: " + users.size());
 	}
 	
 	// **Create/Join Games**

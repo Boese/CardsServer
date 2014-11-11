@@ -2,8 +2,11 @@ package com.cards.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+
+import com.cards.utils.MongoDbManager;
 
 import naga.ConnectionAcceptor;
 import naga.NIOServerSocket;
@@ -34,6 +37,10 @@ public class Server implements ServerSocketObserver {
 		eventmachine.start();
 			//Initialize UserManager
 		UserManager.getInstance().init(eventmachine);
+			//Initialize MongoDbManager
+		MongoDbManager.getInstance().init();
+		
+		System.out.println("**Server Started**");
 		}catch(Exception e) {
 			e.printStackTrace();
 		}

@@ -17,7 +17,8 @@ public class User implements SocketObserver {
     User(NIOSocket socket)
     {
         this.socket = socket;
-        this.state = UserState.Login;
+        this.state = UserState.PreLogin;
+        this.router = new UserRouter();
         this.socket.setPacketReader(new AsciiLinePacketReader());
         this.socket.setPacketWriter(new AsciiLinePacketWriter());
         this.socket.listen(this);
