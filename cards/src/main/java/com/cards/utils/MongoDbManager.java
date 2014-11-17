@@ -17,6 +17,7 @@ public class MongoDbManager {
 	public void init() {
 		try {
 			mongoclient = new MongoClient(DbHost);
+			System.out.println("**MongoDbManager started**");
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}

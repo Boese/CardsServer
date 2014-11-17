@@ -15,10 +15,12 @@ public class User implements SocketObserver {
     private UserState state;
     private String session_id;
     private String game_id;
+    private int port;
     
     User(NIOSocket socket)
     {
         this.socket = socket;
+        this.setPort(socket.getPort());
         this.state = UserState.PreLogin;
         this.router = new UserRouter();
         this.socket.setPacketReader(new AsciiLinePacketReader());
@@ -28,15 +30,12 @@ public class User implements SocketObserver {
     
 	@Override
 	public void connectionBroken(NIOSocket socket, Exception e) {
-		System.out.println("socket disconnected on : " + socket.getPort());
 		socket.closeAfterWrite();
-		GameManager.getInstance().removeUserFromGame(this);
 		UserManager.getInstance().removeUser(this);
 	}
 
 	@Override
 	public void connectionOpened(NIOSocket socket) {
-		System.out.println("socket connected on : " + socket.getPort());
 		router.routeUser(this, null);
 	}
 
@@ -92,5 +91,13 @@ public class User implements SocketObserver {
 
 	public void setSession_id(String session_id) {
 		this.session_id = session_id;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public void setPort(int port) {
+		this.port = port;
 	}
 }

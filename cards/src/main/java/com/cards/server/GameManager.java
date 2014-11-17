@@ -12,13 +12,17 @@ import com.cards.message.ResponsePacket;
 import com.cards.utils.MessageTransformer;
 
 public class GameManager {
+	private GameManager() {}
+	
 	private static final GameManager INSTANCE = new GameManager();
 	private static Map<String,Game> games;
 	private MessageTransformer msgTransformer;
 	
-	private GameManager() {
+	// **Initialize**
+	public void init() {
 		games = new HashMap<String, Game>();
 		msgTransformer = new MessageTransformer();
+		System.out.println("**Game Manager started**");
 	}
 	
 	public static GameManager getInstance() {
@@ -26,7 +30,11 @@ public class GameManager {
 	}
 	
 	public void removeGame(String key) {
-		games.remove(key);
+		try {
+			Game game = games.get(key);
+			games.remove(key);
+			System.out.println(game.getGameType() + " game removed. Number of games : " + games.size());
+		} catch(Exception e) {}
 	}
 	
 	// **Create/Join Games**
@@ -44,6 +52,11 @@ public class GameManager {
 			games.put(key, game);
 			game.addUser(user);
 			user.setGame_id(key);
+			System.out.println("User " + user.getPort() + " joined new game of " + game.getGameType());
+			System.out.println(game.getGameType() + " game added. Number of games : " + games.size());
+		}
+		else {
+			UserManager.getInstance().removeUser(user);
 		}
 	}
 	
@@ -53,6 +66,7 @@ public class GameManager {
 				if(!game.isGameFull()) {
 					game.addUser(user);
 					user.setGame_id(game.getGameId());
+					System.out.println("User " + user.getPort() + " joined random game of " + game.getGameType());
 					return;
 				}
 			}
@@ -67,6 +81,7 @@ public class GameManager {
 		if(!game.isGameFull()) {
 			game.addUser(user);
 			user.setGame_id(game_id);
+			System.out.println("User " + user.getPort() + " joined current game of " + game.getGameType());
 		}
 		else
 			user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response", "Game is full")));
@@ -75,9 +90,7 @@ public class GameManager {
 	public void removeUserFromGame(User user) {
 		try {
 			games.get(user.getGame_id()).removeUser(user);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		} catch(Exception e) {}
 	}
 	
 	public void play(User user, JSONObject response) {
@@ -86,11 +99,8 @@ public class GameManager {
 				games.get(user.getGame_id()).Play(response);
 			}
 			else {
-				this.removeUserFromGame(user);
 				UserManager.getInstance().removeUser(user);
 			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		} catch(Exception e) {}
 	}
 }

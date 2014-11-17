@@ -1,5 +1,8 @@
 package com.cards.message;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /*
 	Login {
 	 * request: 'login',

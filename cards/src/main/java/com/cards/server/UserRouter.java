@@ -32,8 +32,11 @@ public class UserRouter {
 		user.cancelTimeoutEvent();
 		switch(user.getUserState()) {
 			case PreLogin: SendSalt(user);
+				break;
 			case Login: HandleLogin(user, message);
+				break;
 			case Lobby: HandleLobby(user, message);
+				break;
 		}
 		return null;
 	}
@@ -72,11 +75,11 @@ public class UserRouter {
 			}
 			
 			switch(lobbyPacket.getRequest()) {
-				case "join_game": GameManager.getInstance().joinSelectedGame(user, lobbyPacket.getGame_id());
-				case "random_game": GameManager.getInstance().joinRandomGame(user, lobbyPacket.getGame_type());
-				case "create_game": GameManager.getInstance().createGame(user, lobbyPacket.getGame_type());
-				case "quit_game": GameManager.getInstance().removeUserFromGame(user);
-				case "play": GameManager.getInstance().play(user, new JSONObject());
+				case "join_game": GameManager.getInstance().joinSelectedGame(user, lobbyPacket.getGame_id()); break;
+				case "random_game": GameManager.getInstance().joinRandomGame(user, lobbyPacket.getGame_type()); break;
+				case "new_game": GameManager.getInstance().createGame(user, lobbyPacket.getGame_type()); break;
+				case "quit_game": GameManager.getInstance().removeUserFromGame(user); break;
+				case "play": GameManager.getInstance().play(user, new JSONObject()); break;
 			}
 		} catch(Exception e) {
 			e.printStackTrace();

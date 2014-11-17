@@ -15,8 +15,6 @@ public class UserManager {
 	// Common
 	public EventMachine eventmachine;
 	
-	// Games
-	
 	public static UserManager getInstance() {
 		return INSTANCE;
 	}
@@ -25,6 +23,7 @@ public class UserManager {
 	public void init(EventMachine eventmachine) {
 		this.eventmachine = eventmachine;
 		this.users = new ArrayList<User>();
+		System.out.println("**User Manager started**");
 	}
 	
 	// **Add/Remove Users**
@@ -32,6 +31,7 @@ public class UserManager {
 		try {
 			User user = new User(socket);
 			users.add(user);
+			System.out.println("User " + user.getPort() + " connected");
 			System.out.println("Number of users connected: " + users.size());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -40,7 +40,9 @@ public class UserManager {
 	
 	public void removeUser(User user) {
 		try {
+			GameManager.getInstance().removeUserFromGame(user);
 			users.remove(user);
+			System.out.println("User " + user.getPort() + " disconnected");
 			System.out.println("Number of users connected: " + users.size());
 		} catch (Exception e) {
 			e.printStackTrace();

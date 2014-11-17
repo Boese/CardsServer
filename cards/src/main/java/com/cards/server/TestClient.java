@@ -14,9 +14,11 @@ import naga.packetreader.AsciiLinePacketReader;
 import naga.packetwriter.AsciiLinePacketWriter;
 
 public class TestClient {
+	private static String session_id;
+	private static String salt = null;
 	TestClient() {}
 	
-	public static JSONObject input() {
+	public static JSONObject login() {
 		//Start new thread to capture input. Write to NIOSocket
 		JSONObject object = new JSONObject();
 		
@@ -46,11 +48,45 @@ public class TestClient {
 					 * email: 'email'
 					 * }
 					 */
-					object.put("request", "forgot_password");
+					object.put("request", "login");
 					System.out.println("Enter Username: ");
 					object.put("user_name", reader.readLine());
-					System.out.println("Enter email: ");
-					object.put("email", reader.readLine());
+					System.out.println("Enter password: ");
+					String password = reader.readLine();
+					object.put("hash_password", BCrypt.hashpw(password, salt));
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}.run();
+		
+        return object;
+	}
+	
+	public static JSONObject lobby() {
+		//Start new thread to capture input. Write to NIOSocket
+		JSONObject object = new JSONObject();
+		
+		new Runnable() {
+
+			@Override
+			public void run() {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+				try {
+					/*
+					 * Join Game {
+					 * 	request: 'join_game',
+					 * 	session_id: 'session_id',
+					 * 	game_type: 'game_type',
+					 * 	game_id: 'game_id'
+					 * 	move: 'move'
+					 * }
+					 */
+					object.put("request", "new_game");
+					object.put("session_id", session_id);
+					object.put("game_type", "pinochle");
 					
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -95,10 +131,25 @@ public class TestClient {
                         {
                                 try
                                 {
-                                    System.out.println(new String(packet));
-                                    String login = input().toString();
-                                    System.out.println(login);
-                                    socket.write(login.getBytes());
+                                    JSONObject object = new JSONObject(new String(packet));
+                                    if(object.optString("response").equalsIgnoreCase("salt") ||
+                                    		object.optString("response").equalsIgnoreCase("login")) {
+                                    	salt = object.optString("message");
+                                    	System.out.println("Salt : " + salt);
+	                                    String login = login().toString();
+	                                    System.out.println(login);
+	                                    socket.write(login.getBytes());
+                                    }
+                                    if(object.optString("response").equalsIgnoreCase("session_id")) {
+                                    	session_id = object.optString("message");
+                                    	System.out.println("Session_id : " + session_id);
+                                    	String lobby = lobby().toString();
+                                    	System.out.println(lobby);
+                                    	socket.write(lobby.getBytes());
+                                    }
+                                    else {
+                                    	System.out.println(new String(packet));
+                                    }
                                 }
                                 catch (Exception e)
                                 {

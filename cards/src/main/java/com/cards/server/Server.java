@@ -30,17 +30,23 @@ public class Server implements ServerSocketObserver {
 		engine = SSLContext.getDefault().createSSLEngine();
 			//Start Server on specified InetSocketAddress
 		serversocket = eventmachine.getNIOService().openServerSocket(address,0);
-		System.out.println("Server started on " + serversocket.getAddress());
 			//Start listening for sockets
 		serversocket.listen(this);
 		serversocket.setConnectionAcceptor(ConnectionAcceptor.ALLOW);
 		eventmachine.start();
+		System.out.println("***** SERVER STARTED *****");
+		System.out.println("connected on ip " + serversocket.getIp());
+		System.out.println("listening on port " + serversocket.getPort());
+		System.out.println("--------------------------");
+		
 			//Initialize UserManager
 		UserManager.getInstance().init(eventmachine);
 			//Initialize MongoDbManager
 		MongoDbManager.getInstance().init();
-		
-		System.out.println("**Server Started**");
+			//Initialize GameManager
+		GameManager.getInstance().init();
+		System.out.println("--------------------------");
+		System.out.println();
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
