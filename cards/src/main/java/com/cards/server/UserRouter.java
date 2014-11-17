@@ -1,9 +1,15 @@
 package com.cards.server;
 
-import org.json.JSONObject;
+import java.util.UUID;
+
 import org.mindrot.jbcrypt.BCrypt;
 
+import com.cards.server.message.LobbyPacket;
+import com.cards.server.message.LoginPacket;
+import com.cards.server.message.ResponsePacket;
+import com.cards.utils.MessageTransformer;
 import com.cards.utils.MongoDbManager;
+import com.cards.utils.ParamValidator;
 import com.cards.utils.UserState;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -11,67 +17,33 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 
 public class UserRouter {
-	private static final int LOGIN_TIMEOUT = 10*1000;
+	private static final int LOGIN_TIMEOUT = 60*5*1000;
 	private String salt;
+	private String session_id;
+	private MessageTransformer msgTransformer;
+	private ParamValidator paramValidator;
 	
-	UserRouter() {}
-	
-	public String routeUser(User user, String message) {
-		switch(user.getUserState()) {
-		case PreLogin: SendSalt(user);
-			break;
-		case Login: HandleLogin(user, message);
-			break;
-		case Lobby:
-			/*
-			 * Join Game {
-			 * 	request: 'join_game',
-			 * 	session_id: 'session_id',
-			 * 	game_type: 'game_type',
-			 * 	game_id: 'game_id'
-			 * }
-			 */
-			/*
-			 * Create Game {
-			 * 	request: 'new_game',
-			 * 	session_id: 'session_id',
-			 * 	game_type: 'game_type'
-			 * }
-			 */
-			break;
-		case Game:
-			/*
-			 * Quit Game {
-			 * 	request: 'quit_game',
-			 *  session_id: 'session_id'
-			 * }
-			 * user.state = Lobby
-			 */
-			/*
-			 * Play {
-			 * 	request: 'play',
-			 * 	session_id: 'session_id',
-			 * 	move: 'move'
-			 * }
-			 */
-			break;
-		default: 
-			break;
-		}
-		return null;
+	UserRouter() {
+		msgTransformer = new MessageTransformer();
+		paramValidator = new ParamValidator();
+		session_id = null;
 	}
 	
-	private void SendSalt(User user) {
-		salt = BCrypt.gensalt(12);
-		user.sendMessage("salt : " + salt);
-		user.setUserState(UserState.Login);
+	public String routeUser(User user, String message) {
+		user.cancelTimeoutEvent();
+		switch(user.getUserState()) {
+			case PreLogin: SendSalt(user);
+			case Login: HandleLogin(user, message);
+			case Lobby: HandleLobby(user, message);
+		}
+		return null;
 	}
 	
 	// Create Account, Forgot Password, Login
 	private void HandleLogin(User user, String message) {
 		try {
-			JSONObject object = new JSONObject(message);
-			String request = object.optString("request");
+			// Get Login packet
+			LoginPacket loginPacket = (LoginPacket) msgTransformer.getMessage(message, LoginPacket.class);
 			
 			// Get DB cardsDB
 			MongoDbManager.getInstance();
@@ -80,129 +52,107 @@ public class UserRouter {
 			// Get DBCollection users
 			DBCollection coll = db.getCollection("users");
 			
-			if(request.equals("create_account"))
-				CreateAccount(user, object, coll);
-			else if(request.equals("forgot_password"))
-				ForgotPassword(user, object, coll);
-			else if(request.equals("login"))
-				Login(user, object, coll);
+			// Redirect to request
+			switch(loginPacket.getRequest()) {
+				case "create_account": CreateAccount(loginPacket, coll, user); break;
+				case "forgot_password": ForgotPassword(loginPacket, coll, user); break;
+				case "login": Login(loginPacket, coll, user); break;
+			}
 		}catch(Exception e) {
 			e.printStackTrace();
 			UserManager.getInstance().removeUser(user);
 		}
 	}
 	
-	private void CreateAccount(User user, JSONObject object, DBCollection coll) {
+	private void HandleLobby(User user, String message) {
 		try {
-			System.out.println(object.toString(2));
-			String user_name = object.optString("user_name");
+			LobbyPacket lobbyPacket = (LobbyPacket) msgTransformer.getMessage(message, LobbyPacket.class);
 			
-			// Create Query with user_name
-			BasicDBObject queryUserName = new BasicDBObject("user_name", user_name);
-			
-			// Use cursor to find query
-			DBCursor cursor = coll.find(queryUserName);
-			
-			/*
-			 * Create Account {
-			 * 	request: 'create_account'
-			 * 	user_name: 'user_name',
-			 * 	email: 'email',
-			 * 	hash_password: 'hash_password'
-			 * }
-			 * 
-			 * .append('salt',salt)
-			 */
-			String email = object.optString("email");
-			String hash_password = object.optString("hash_password");
-			
-			// Create Query with email
-			BasicDBObject queryEmail = new BasicDBObject("email",email);
-			DBCursor cursorEmail = coll.find(queryEmail);
-			
-			// Check if username or email is in db
-			if(cursor != null) {
-				if(cursorEmail != null) {
-				// Save user to db
-				BasicDBObject doc = new BasicDBObject("user_name", user_name)
-		        	.append("email", email)
-		        	.append("salt", salt)
-		        	.append("hash_password", hash_password);
-				coll.insert(doc);
-				
-				user.sendMessage("Successfully created account");
-				} else {
-					user.sendMessage("email already in use");
-				}
-			} else {
-				user.sendMessage("username already taken");
+			if(!lobbyPacket.getSession_id().equalsIgnoreCase(session_id)) {
+				throw new Exception("session_id invalid");
 			}
 			
-		}catch(Exception e) {
+			switch(lobbyPacket.getRequest()) {
+				case "join_game": GameManager.getInstance().joinGame(user, lobbyPacket.getGame_id());
+				case "random_game": GameManager.getInstance().joinGame(user, lobbyPacket.getGame_type());
+				case "create_game": GameManager.getInstance().createGame(user, lobbyPacket.getGame_type());
+				case "quit_game": GameManager.getInstance().quitGame(user);
+				case "play": GameManager.getInstance().play(user);
+			}
+		} catch(Exception e) {
 			e.printStackTrace();
 			UserManager.getInstance().removeUser(user);
 		}
 	}
 	
-	private void ForgotPassword(User user, JSONObject object, DBCollection coll) {
-		try {
-			String username = object.optString("username");
-			
-			// Create Query with user_name
-			BasicDBObject queryUserName = new BasicDBObject("username", username);
-			
-			// Use cursor to find query
-			DBCursor cursor = coll.find(queryUserName);
-			
-			/*
-			 * Forgot Password {
-			 * 	request: 'forgot_password',
-			 * 	user_name: 'user_name',
-			 * 	email: 'email'
-			 * }
-			 */
-			
-			// check if username and email is in db
-			// Send password reset link to email
-		} catch (Exception e) {
-			e.printStackTrace();
-			UserManager.getInstance().removeUser(user);
-		}
+	// Send random salt to user on connect
+	private void SendSalt(User user) {
+		salt = BCrypt.gensalt(12);
+		user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("salt",salt)));
+		user.setUserState(UserState.Login);
+		user.scheduleTimeoutEvent(LOGIN_TIMEOUT);
 	}
 	
-	private void Login(User user, JSONObject object, DBCollection coll) {
+	private void sendUUID(User user) {
+		session_id = UUID.randomUUID().toString();
+		user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("session_id", session_id)));
+	}
+	
+	private void CreateAccount(LoginPacket request, DBCollection coll, User user) {
 		try {
-			String username = object.optString("username");
+			if(!(paramValidator.validate(request.getUser_name(), "username") && 
+					paramValidator.validate(request.getEmail(), "email"))) {
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_account","Invalid username or email")));
+				throw new Exception();
+			}
+			// Check if username or email is already taken
+			if(!coll.find(new BasicDBObject("user_name", request.getUser_name())).hasNext()) {
+				if(!coll.find(new BasicDBObject("email", request.getEmail())).hasNext()) {
+				// Save user to db
+				BasicDBObject doc = new BasicDBObject()
+					.append("user_name", request.getUser_name())
+		        	.append("email", request.getEmail())
+		        	.append("hash_password", request.getHash_password());
+				coll.insert(doc);
+				
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_account", "success")));
+				SendSalt(user);
+				} else {
+					user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_account", "Email already taken")));
+				}
+			} else {
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_account", "Username already taken")));
+			}
 			
-			// Create Query with user_name
-			BasicDBObject queryUserName = new BasicDBObject("username", username);
+		}catch(Exception e) {}
+	}
+	
+	private void ForgotPassword(LoginPacket request, DBCollection coll, User user) {
+		try {
+			// Check that given username and email match a record in DB
+			DBCursor cursor = coll.find(new BasicDBObject("user_name", request.getUser_name()));
+			if(request.getEmail().equalsIgnoreCase(((BasicDBObject) cursor.next()).getString("email")))
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("forgot_password", "success")));
+			else
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("forgot_password", "Invalid username or email")));
+		} catch (Exception e) {}
+	}
+	
+	private void Login(LoginPacket request, DBCollection coll, User user) {
+		try {
+			// Use cursor to find query -> password
+			DBCursor cursor = coll.find(new BasicDBObject("user_name", request.getUser_name()));
+			String salted_hash_password = BCrypt.hashpw(((BasicDBObject) cursor.next()).getString("hash_password"), salt);
 			
-			// Use cursor to find query
-			DBCursor cursor = coll.find(queryUserName);
-			
-			/*
-			 * Login {
-			 * 	request: 'login',
-			 * 	user_name: 'user_name',
-			 * 	hash_token: 'hash_token'
-			 * }
-			 */
-			//hash_token
-			String hash_token = object.optString("hash_token");
-			
-			String salted_hash_token = BCrypt.hashpw(hash_token, salt);
-			
-			// Salt users password with token
-			String salted_hash_password = BCrypt.hashpw(cursor.toString(), salt);
-
 			// Check that an unencrypted password matches one that has
 			// previously been hashed
-			if (salted_hash_token.equals(salted_hash_password))
-			    user.sendMessage("Login Success");
-			user.sendMessage("Login Failed");
-		} catch (Exception e) {
-			e.printStackTrace();
-			UserManager.getInstance().removeUser(user);
-		}
+			if (request.getHash_password().equals(salted_hash_password)) {
+				user.setUserState(UserState.Lobby);
+				sendUUID(user);
+			}
+			else {
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("login", "Invalid username or email")));
+			}
+		} catch (Exception e) {}
 	}
 }

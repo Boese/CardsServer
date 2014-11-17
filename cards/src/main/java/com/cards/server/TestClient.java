@@ -33,15 +33,24 @@ public class TestClient {
 					 * 	email: 'email',
 					 * 	hash_password: 'hash_password'
 					 * }
+					 * 
+					 * Login {
+					 * request: 'login',
+					 * user_name: 'user_name',
+					 * hash_password: 'hash_password'
+					 * }
+					 * 
+					 * Forgot password {
+					 * request: 'forgot_password',
+					 * user_name: 'user_name',
+					 * email: 'email'
+					 * }
 					 */
-					object.put("request", "create_account");
+					object.put("request", "forgot_password");
 					System.out.println("Enter Username: ");
 					object.put("user_name", reader.readLine());
 					System.out.println("Enter email: ");
 					object.put("email", reader.readLine());
-					System.out.println("Enter password: ");
-					object.put("hash_password", reader.readLine());
-					System.out.println("Built login object");
 					
 				} catch (Exception e) {
 					e.printStackTrace();

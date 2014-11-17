@@ -3,10 +3,10 @@ package com.cards.server;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mongodb.MongoClient;
-
 import naga.NIOSocket;
 import naga.eventmachine.EventMachine;
+
+import com.cards.utils.MessageTransformer;
 
 public class UserManager {
 	private UserManager() {}
@@ -39,27 +39,5 @@ public class UserManager {
 	public void removeUser(User user) {
 		users.remove(user);
 		System.out.println("Number of users connected: " + users.size());
-	}
-	
-	// **Create/Join Games**
-	public void startNewGame(User user, String gametype) {
-		/*
-		 * Start a new game instance of game type with user
-		 * Broadcast
-		 */
-	}
-	
-	public void joinRandomGame(User user, String gametype){
-		/*
-		 * Put user in a random game of game type
-		 * Broadcast
-		 */
-	}
-	
-	public void joinGame(User user, int gamenum) {
-		/*
-		 * Put user in a selected game
-		 * Broadcast
-		 */
 	}
 }
