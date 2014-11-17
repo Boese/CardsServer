@@ -3,7 +3,6 @@ package com.cards.games.pinochle.states;
 import org.json.JSONObject;
 
 import com.cards.games.pinochle.Pinochle;
-import com.cards.games.pinochle.utils.iPinochleState;
 
 
 public class Pause implements iPinochleState {
@@ -16,11 +15,11 @@ public class Pause implements iPinochleState {
 	}
 	@Override
 	public void Play(JSONObject response) {
-		if(mP.gameFull()) {
+		if(mP.isGameFull()) {
 			gameHasStarted = true;
 			mP.setCurrentMessage("Game is about to start...");
-			mP.notifyObservers();
-			mP.setState(mP.getStartState());
+			mP.update();
+			mP.setState(Pinochle.getStart());
 			mP.Play(null);
 		}
 		else {
@@ -29,7 +28,7 @@ public class Pause implements iPinochleState {
 				mP.setCurrentMessage("**PAUSED - RESTARTING ROUND** Waiting for " + playersNeeded + " more player(s)");
 			else
 				mP.setCurrentMessage("Waiting for " + playersNeeded + " more player(s) to start game");
-			mP.notifyObservers();
+			mP.update();
 		}
 	}
 }

@@ -6,8 +6,6 @@ import java.util.List;
 import naga.NIOSocket;
 import naga.eventmachine.EventMachine;
 
-import com.cards.utils.MessageTransformer;
-
 public class UserManager {
 	private UserManager() {}
 	
@@ -31,13 +29,21 @@ public class UserManager {
 	
 	// **Add/Remove Users**
 	public void addUser(NIOSocket socket) {
-		User user = new User(socket);
-		users.add(user);
-		System.out.println("Number of users connected: " + users.size());
+		try {
+			User user = new User(socket);
+			users.add(user);
+			System.out.println("Number of users connected: " + users.size());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void removeUser(User user) {
-		users.remove(user);
-		System.out.println("Number of users connected: " + users.size());
+		try {
+			users.remove(user);
+			System.out.println("Number of users connected: " + users.size());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

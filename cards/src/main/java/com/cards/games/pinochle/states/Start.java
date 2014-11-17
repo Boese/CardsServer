@@ -3,7 +3,6 @@ package com.cards.games.pinochle.states;
 import org.json.JSONObject;
 
 import com.cards.games.pinochle.Pinochle;
-import com.cards.games.pinochle.utils.iPinochleState;
 
 
 /*
@@ -17,8 +16,8 @@ public class Start implements iPinochleState {
 	@Override
 	public void Play(JSONObject response) {
 		mP.setCurrentMessage("Starting Game!");
-		mP.notifyObservers();
-		mP.setState(mP.getDealState());
+		mP.update();
+		mP.setState(Pinochle.getDeal());
 		mP.Play(null);
 	}
 }

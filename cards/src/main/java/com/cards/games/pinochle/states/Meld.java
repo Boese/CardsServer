@@ -3,7 +3,6 @@ package com.cards.games.pinochle.states;
 import org.json.JSONObject;
 
 import com.cards.games.pinochle.Pinochle;
-import com.cards.games.pinochle.utils.iPinochleState;
 
 
 public class Meld implements iPinochleState {
@@ -14,8 +13,8 @@ public class Meld implements iPinochleState {
 	@Override
 	public void Play(JSONObject response) {
 		mP.setCurrentMessage("Melding Cards...");
-		mP.notifyObservers();
-		mP.setState(mP.getRoundState());
+		mP.update();
+		mP.setState(Pinochle.getRound());
 		mP.Play(null);
 	}
 	

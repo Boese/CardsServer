@@ -1,4 +1,4 @@
-package com.cards.server.message;
+package com.cards.message;
 
 public class ResponsePacket {
 	private String response;

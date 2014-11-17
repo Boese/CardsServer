@@ -6,7 +6,6 @@ import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Request;
 import com.cards.games.pinochle.enums.Suit;
 import com.cards.games.pinochle.player.PlayerResponse;
-import com.cards.games.pinochle.utils.iPinochleState;
 
 
 public class Trump implements iPinochleState {
@@ -23,11 +22,11 @@ public class Trump implements iPinochleState {
 			
 			mP.setCurrentTrump(move);
 			mP.setCurrentMessage(mP.getCurrentTurn() + " selected " + mP.getCurrentTrump() + " as trump!");
-			mP.notifyObservers();
-			mP.setState(mP.getPassState());
+			mP.update();
+			mP.setState(Pinochle.getPass());
 			mP.Play(null);
 		} catch (Exception e) {
-			mP.notifyObservers(Request.Trump);
+			mP.update(Request.Trump);
 		}
 	}
 }

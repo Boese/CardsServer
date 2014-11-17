@@ -2,11 +2,12 @@ package com.cards.server;
 
 import java.util.UUID;
 
+import org.json.JSONObject;
 import org.mindrot.jbcrypt.BCrypt;
 
-import com.cards.server.message.LobbyPacket;
-import com.cards.server.message.LoginPacket;
-import com.cards.server.message.ResponsePacket;
+import com.cards.message.LobbyPacket;
+import com.cards.message.LoginPacket;
+import com.cards.message.ResponsePacket;
 import com.cards.utils.MessageTransformer;
 import com.cards.utils.MongoDbManager;
 import com.cards.utils.ParamValidator;
@@ -19,14 +20,12 @@ import com.mongodb.DBCursor;
 public class UserRouter {
 	private static final int LOGIN_TIMEOUT = 60*5*1000;
 	private String salt;
-	private String session_id;
 	private MessageTransformer msgTransformer;
 	private ParamValidator paramValidator;
 	
 	UserRouter() {
 		msgTransformer = new MessageTransformer();
 		paramValidator = new ParamValidator();
-		session_id = null;
 	}
 	
 	public String routeUser(User user, String message) {
@@ -68,16 +67,16 @@ public class UserRouter {
 		try {
 			LobbyPacket lobbyPacket = (LobbyPacket) msgTransformer.getMessage(message, LobbyPacket.class);
 			
-			if(!lobbyPacket.getSession_id().equalsIgnoreCase(session_id)) {
+			if(!lobbyPacket.getSession_id().equalsIgnoreCase(user.getSession_id())) {
 				throw new Exception("session_id invalid");
 			}
 			
 			switch(lobbyPacket.getRequest()) {
-				case "join_game": GameManager.getInstance().joinGame(user, lobbyPacket.getGame_id());
-				case "random_game": GameManager.getInstance().joinGame(user, lobbyPacket.getGame_type());
+				case "join_game": GameManager.getInstance().joinSelectedGame(user, lobbyPacket.getGame_id());
+				case "random_game": GameManager.getInstance().joinRandomGame(user, lobbyPacket.getGame_type());
 				case "create_game": GameManager.getInstance().createGame(user, lobbyPacket.getGame_type());
-				case "quit_game": GameManager.getInstance().quitGame(user);
-				case "play": GameManager.getInstance().play(user);
+				case "quit_game": GameManager.getInstance().removeUserFromGame(user);
+				case "play": GameManager.getInstance().play(user, new JSONObject());
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -94,7 +93,8 @@ public class UserRouter {
 	}
 	
 	private void sendUUID(User user) {
-		session_id = UUID.randomUUID().toString();
+		String session_id = UUID.randomUUID().toString();
+		user.setSession_id(session_id);
 		user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("session_id", session_id)));
 	}
 	

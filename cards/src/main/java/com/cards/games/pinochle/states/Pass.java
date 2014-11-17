@@ -7,7 +7,6 @@ import org.json.JSONObject;
 import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Card;
 import com.cards.games.pinochle.player.Player;
-import com.cards.games.pinochle.utils.iPinochleState;
 
 
 public class Pass implements iPinochleState {
@@ -18,8 +17,8 @@ public class Pass implements iPinochleState {
 	@Override
 	public void Play(JSONObject response) {
 		mP.setCurrentMessage("*** PASSING CARDS ***");
-		mP.notifyObservers();
-		mP.setState(mP.getMeldState());
+		mP.update();
+		mP.setState(Pinochle.getMeld());
 		mP.Play(null);
 	}
 	

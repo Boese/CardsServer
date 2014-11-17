@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import naga.NIOSocket;
-
 import org.json.JSONObject;
 
 import com.cards.games.pinochle.enums.Card;
@@ -22,16 +20,15 @@ public class Player {
 	private List<Card> currentCards; //current cards List<enum cards>
 	private Position teamMate;
 	private JSONObject currentJSON;
-
-	private NIOSocket socket;
+	private String id;
 	
-	public Player(Position position, int team, NIOSocket socket) {
+	public Player(Position position, int team, String id) {
 		this.position=position;
 		this.teamMate = position.getNext(2);
 		this.team = team;
 		this.currentCards = new ArrayList<Card>();
-		this.socket = socket;
 		this.currentJSON = new JSONObject();
+		this.setId(id);
 	}
 	
 	public String toString() {
@@ -43,7 +40,6 @@ public class Player {
 			player += card + " , ";
 		}
 		player += "\n";
-		player += "Socket : " + socket + "\n";
 		return player;
 	}
 	
@@ -106,14 +102,6 @@ public class Player {
 		return teamMate;
 	}
 	
-	public void setSocket(NIOSocket socket) {
-		this.socket = socket;
-	}
-	
-	public NIOSocket getSocket() {
-		return this.socket;
-	}
-	
 	public void setCards(List<Card> newCards) {
 		this.currentCards = newCards;
 		this.currentCards.sort(new CardComparator());
@@ -141,5 +129,13 @@ public class Player {
 		if(numberOfNines >= 5 && new CalculateMeld(null, currentCards).calculate() == 0)
 			return true;
 		return false;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 }

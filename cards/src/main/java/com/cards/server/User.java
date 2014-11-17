@@ -13,6 +13,8 @@ public class User implements SocketObserver {
     private DelayedEvent disconnectEvent;
     private UserRouter router;
     private UserState state;
+    private String session_id;
+    private String game_id;
     
     User(NIOSocket socket)
     {
@@ -28,6 +30,7 @@ public class User implements SocketObserver {
 	public void connectionBroken(NIOSocket socket, Exception e) {
 		System.out.println("socket disconnected on : " + socket.getPort());
 		socket.closeAfterWrite();
+		GameManager.getInstance().removeUserFromGame(this);
 		UserManager.getInstance().removeUser(this);
 	}
 
@@ -73,5 +76,21 @@ public class User implements SocketObserver {
 	
 	public UserState getUserState() {
 		return state;
+	}
+
+	public String getGame_id() {
+		return game_id;
+	}
+
+	public void setGame_id(String game_id) {
+		this.game_id = game_id;
+	}
+
+	public String getSession_id() {
+		return session_id;
+	}
+
+	public void setSession_id(String session_id) {
+		this.session_id = session_id;
 	}
 }

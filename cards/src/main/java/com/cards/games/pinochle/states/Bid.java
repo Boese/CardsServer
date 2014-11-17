@@ -10,7 +10,6 @@ import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Request;
 import com.cards.games.pinochle.player.PlayerResponse;
-import com.cards.games.pinochle.utils.iPinochleState;
 
 
 public class Bid implements iPinochleState{
@@ -36,7 +35,7 @@ public class Bid implements iPinochleState{
 			// If bid == 0, player passes. Notify and remove player from bidders. Increment turn.
 			if(bid == 0) {
 				mP.setCurrentMessage("Bid from player " + mP.getCurrentTurn() + " : pass");
-				mP.notifyObservers();
+				mP.update();
 				bidTurn.remove();
 				incTurn();
 			}
@@ -45,7 +44,7 @@ public class Bid implements iPinochleState{
 			else if(bid > currentBid) {
 				currentBid = bid;
 				mP.setCurrentMessage("Bid from player " + mP.getCurrentTurn() + " : " + currentBid);
-				mP.notifyObservers();
+				mP.update();
 				incTurn();
 			}
 			
@@ -53,18 +52,18 @@ public class Bid implements iPinochleState{
 			if(bidders.size() == 1 && currentBid != 0) {
 				lastBidder = lastBidder.getNext(1);
 				mP.setCurrentTurn(bidders.get(0));
-				mP.setState(mP.getTrumpState());
+				mP.setState(Pinochle.getTrump());
 				mP.setCurrentMessage("Player " + mP.getCurrentTurn() + " won bid at " + currentBid + ", Selecting Trump...");
-				mP.notifyObservers();
+				mP.update();
 				mP.Play(null);
 			}
 			// Check if everyone passed
 			else if(bidders.size() == 0) {
 				lastBidder = lastBidder.getNext(1);
 				mP.setCurrentTurn(lastBidder);
-				mP.setState(mP.getDealState());
+				mP.setState(Pinochle.getDeal());
 				mP.setCurrentMessage("Everyone passed! Redeal...");
-				mP.notifyObservers();
+				mP.update();
 				mP.Play(null);
 			}
 			
@@ -79,7 +78,7 @@ public class Bid implements iPinochleState{
 	}
 	
 	private void requestBid() {
-		mP.notifyObservers(Request.Bid);
+		mP.update(Request.Bid);
 	}
 	
 	private void incTurn() {
@@ -100,7 +99,7 @@ public class Bid implements iPinochleState{
 		
 		// Notify players that the bidding round is starting and which turn it is
 		mP.setCurrentMessage("Starting bidding round with : " + mP.getCurrentTurn());
-		mP.notifyObservers();
+		mP.update();
 		
 		// Initialize bidders list with the correct order of players starting with last bidder. Set bidTurn to bidders.listIterator
 		bidders = new ArrayList<Position>();

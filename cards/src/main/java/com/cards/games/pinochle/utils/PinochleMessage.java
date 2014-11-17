@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Card;
-import com.cards.games.pinochle.enums.PinochleState;
 import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Request;
 import com.cards.games.pinochle.player.Player;
+import com.cards.games.pinochle.states.iPinochleState;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,7 +17,7 @@ public class PinochleMessage {
 	int team2Score;
 	Position currentTurn;
 	Request currentRequest;
-	PinochleState currentState;
+	iPinochleState currentState;
 	String currentMessage;
 	List<Card> cards;
 	Position myPosition;
@@ -30,7 +30,7 @@ public class PinochleMessage {
 		team2Score = pin.getTeam2Score();
 		currentTurn = pin.getCurrentTurn();
 		currentRequest = pin.getCurrentRequest();
-		currentState = pin.getPinochleState();
+		currentState = pin.getCurrentState();
 		currentMessage = pin.getCurrentMessage();
 	}
 	
@@ -116,13 +116,5 @@ public class PinochleMessage {
 
 	public void setMyTurn(Boolean myTurn) {
 		this.myTurn = myTurn;
-	}
-
-	public PinochleState getCurrentState() {
-		return currentState;
-	}
-
-	public void setCurrentState(PinochleState currentState) {
-		this.currentState = currentState;
 	}
 }

@@ -13,7 +13,6 @@ import com.cards.games.pinochle.enums.Card;
 import com.cards.games.pinochle.enums.Face;
 import com.cards.games.pinochle.enums.Suit;
 import com.cards.games.pinochle.player.Player;
-import com.cards.games.pinochle.utils.iPinochleState;
 
 
 public class Deal implements iPinochleState {
@@ -25,15 +24,15 @@ public class Deal implements iPinochleState {
 	public void Play(JSONObject response) {
 		mP.setCurrentMessage("Dealing...");
 		deal();
-		mP.notifyObservers();
+		mP.update();
 		
 		if(!checkForNines()) {
-			((Bid) mP.getBidState()).startBid();
-			mP.setState(mP.getBidState());
+			((Bid) Pinochle.getBid()).startBid();
+			mP.setState(Pinochle.getBid());
 		}
 		else {
 			mP.setCurrentMessage("Re-dealing... One Player got 5 Nines and no meld!");
-			mP.notifyObservers();
+			mP.update();
 		}
 		
 		mP.Play(null);

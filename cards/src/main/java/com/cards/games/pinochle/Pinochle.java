@@ -3,11 +3,9 @@ package com.cards.games.pinochle;
 import java.util.ArrayList;
 import java.util.List;
 
-import naga.NIOSocket;
-
 import org.json.JSONObject;
 
-import com.cards.games.pinochle.enums.PinochleState;
+import com.cards.games.Game;
 import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Request;
 import com.cards.games.pinochle.enums.Suit;
@@ -21,13 +19,13 @@ import com.cards.games.pinochle.states.Pause;
 import com.cards.games.pinochle.states.Round;
 import com.cards.games.pinochle.states.Start;
 import com.cards.games.pinochle.states.Trump;
+import com.cards.games.pinochle.states.iPinochleState;
 import com.cards.games.pinochle.utils.GameStateObserver;
-import com.cards.games.pinochle.utils.GameStateSubject;
 import com.cards.games.pinochle.utils.PinochleMessage;
-import com.cards.games.pinochle.utils.iPinochleState;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class Pinochle implements GameStateSubject, iPinochleState{
+public class Pinochle extends Game{
+	private static final String GAME_TYPE = "Pinochle";
 	
 	//** Class Variables
 	List<Player> players;
@@ -37,7 +35,6 @@ public class Pinochle implements GameStateSubject, iPinochleState{
 	Suit currentTrump;
 	Request currentRequest;
 	String currentMessage;
-	PinochleState pinochleState;
 	
 	//** iPinochleStates
 	static iPinochleState Start;
@@ -66,7 +63,6 @@ public class Pinochle implements GameStateSubject, iPinochleState{
 		currentTrump = null;
 		currentRequest = Request.Null;
 		currentMessage = "";
-		pinochleState = PinochleState.Pause;
 		
 		Start = new Start(this);
 		Deal = new Deal(this);
@@ -87,54 +83,58 @@ public class Pinochle implements GameStateSubject, iPinochleState{
 	// Set current state
 	public void setState(final iPinochleState state) {
 		this.currentState = state;
-		pinochleState = PinochleState.valueOf(currentState.getClass().getSimpleName());
 	}
 	
 	//** Play function will call current state Play()
+	@Override
 	public void Play(JSONObject response) {
-		if(!gameFull())
+		if(!isGameFull())
 			setState(Pause);
 		currentState.Play(response);
 	}
 	
-	//Observer methods
 	@Override
-	public void registerObserver(GameStateObserver observer) {
-		pinochleGameObservers.add(observer);
+	public Boolean isGameFull() {
+		Boolean full = false;
+		if(players.size() == 4) {
+			full = true;
+		}
+		return full;
 	}
 
 	@Override
-	public void removeObserver(GameStateObserver observer) {
-		pinochleGameObservers.remove(observer);
+	public String getGameType() {
+		return GAME_TYPE;
+	}
+
+	@Override
+	public Boolean isCurrentTurn(String id) {
+		Boolean turn = false;
+		Player p = getPlayer(currentTurn);
+		if(p.getId().equals(id))
+			turn = true;
+		return turn;
 	}
 	
-	@Override
-	public void notifyObservers() {
+	// Broadcast updated game call super
+	public void update() {
 		PinochleMessage pinMessage = new PinochleMessage(this);
-		
-		for(GameStateObserver observer : pinochleGameObservers)
-			for(Player p : players)
-				observer.update(p.getSocket(),pinMessage.update(p));
-	};
+		for(Player p : players)
+			super.update(p.getId(),pinMessage.update(p));
+	}
 	
-	@Override
-	public void notifyObservers(Request request) {
+	// Request Move from player call super
+	public void update(Request request) {
 		setCurrentRequest(request);
 		PinochleMessage pinMessage = new PinochleMessage(this);
-		
 		Player p = getPlayer(currentTurn);
-		for (GameStateObserver observer : pinochleGameObservers) {
-			observer.request(p.getSocket(), pinMessage.update(p));
-		}
-		
+		super.sendRequest(p.getId(), pinMessage.update(p));
 		currentRequest = Request.Null;
 	}
 	
-	@Override
-	public void notifyObserversGameover() {
-		for(GameStateObserver observer : pinochleGameObservers) {
-			observer.close();
-		}
+	// Notify Game is over call super
+	public void gameover() {
+		super.gameOver();
 	}
 		
 	// Helper methods
@@ -150,28 +150,28 @@ public class Pinochle implements GameStateSubject, iPinochleState{
 		return availPositions.get(0);
 	}
 		
-	public void addPlayer(NIOSocket socket) throws Exception {
+	@Override
+	public void addPlayer(String id) {
 		Position position = findNextAvailablePosition();
 		int teamNum = 1;
 		if(position.equals(Position.East) || position.equals(Position.West))
 			teamNum = 2;
-		Player p = new Player(position,teamNum,socket);
+		Player p = new Player(position,teamNum,id);
 		if(players.size() <= 3) {
 			players.add(p);
 			currentMessage = "**WELCOME TO PINOCHLE**";
-			notifyObservers();
+			update();
 		}
-		else
-			throw new Exception("FourHandedPinochle Full");
 	}
 		
-	public void removePlayer(NIOSocket socket) {
+	@Override
+	public void removePlayer(String id) {
 		for (Player player : players) {
-			if(player.getSocket() == socket) {
+			if(player.getId().equalsIgnoreCase(id)) {
 				players.remove(player);
 				currentRequest = Request.Null;
 				currentMessage = "Player " + player.getPosition() + " just quit...";
-				notifyObservers();
+				update();
 				break;
 			}
 		}
@@ -186,30 +186,22 @@ public class Pinochle implements GameStateSubject, iPinochleState{
 		return tempPlayer;
 	}
 	
-	public Player getPlayer(NIOSocket socket) {
+	public Player getPlayer(String id) {
 		Player tempPlayer = null;
 		for (Player player : players) {
-			if(player.getSocket() == socket)
+			if(player.getId().equalsIgnoreCase(id))
 				tempPlayer = player;
 		}
 		return tempPlayer;
 	}
 		
-	public Position getPosition(NIOSocket socket) {
+	public Position getPosition(String id) {
 		Position tempPosition = null;
 		for (Player player : players) {
-			if(player.getSocket() == socket)
+			if(player.getId().equalsIgnoreCase(id))
 				tempPosition = player.getPosition();
 		}
 		return tempPosition;
-	}
-		
-	public boolean gameFull() {
-		boolean full = false;
-		if(players.size() == 4) {
-			full = true;
-		}
-		return full;
 	}
 	
 	public List<Player> getPlayers() {
@@ -259,14 +251,6 @@ public class Pinochle implements GameStateSubject, iPinochleState{
 	public void setCurrentRequest(Request currentRequest) {
 		this.currentRequest = currentRequest;
 	}
-
-	public PinochleState getPinochleState() {
-		return pinochleState;
-	}
-
-	public void setPinochleState(PinochleState pinochleState) {
-		this.pinochleState = pinochleState;
-	}
 	
 	public ObjectMapper getMapper() {
 		return mapper;
@@ -278,78 +262,6 @@ public class Pinochle implements GameStateSubject, iPinochleState{
 
 	public void setCurrentMessage(String currentMessage) {
 		this.currentMessage = currentMessage;
-	}
-
-	public iPinochleState getStartState() {
-		return Start;
-	}
-
-	public void setStart(iPinochleState start) {
-		Start = start;
-	}
-
-	public iPinochleState getDealState() {
-		return Deal;
-	}
-
-	public void setDeal(iPinochleState deal) {
-		Deal = deal;
-	}
-
-	public iPinochleState getBidState() {
-		return Bid;
-	}
-
-	public void setBid(iPinochleState bid) {
-		Bid = bid;
-	}
-
-	public iPinochleState getTrumpState() {
-		return Trump;
-	}
-
-	public void setTrump(iPinochleState trump) {
-		Trump = trump;
-	}
-
-	public iPinochleState getPassState() {
-		return Pass;
-	}
-
-	public void setPass(iPinochleState pass) {
-		Pass = pass;
-	}
-
-	public iPinochleState getMeldState() {
-		return Meld;
-	}
-
-	public void setMeld(iPinochleState meld) {
-		Meld = meld;
-	}
-
-	public iPinochleState getPauseState() {
-		return Pause;
-	}
-
-	public void setPause(iPinochleState pause) {
-		Pause = pause;
-	}
-
-	public iPinochleState getGameoverState() {
-		return Gameover;
-	}
-
-	public void setGameover(iPinochleState gameover) {
-		Gameover = gameover;
-	}
-
-	public iPinochleState getRoundState() {
-		return Round;
-	}
-
-	public void setRound(iPinochleState round) {
-		Round = round;
 	}
 
 	public List<GameStateObserver> getPinochleGameObservers() {
@@ -375,5 +287,77 @@ public class Pinochle implements GameStateSubject, iPinochleState{
 
 	public void setCurrentState(iPinochleState currentState) {
 		this.currentState = currentState;
+	}
+
+	public static iPinochleState getStart() {
+		return Start;
+	}
+
+	public static void setStart(iPinochleState start) {
+		Start = start;
+	}
+
+	public static iPinochleState getDeal() {
+		return Deal;
+	}
+
+	public static void setDeal(iPinochleState deal) {
+		Deal = deal;
+	}
+
+	public static iPinochleState getBid() {
+		return Bid;
+	}
+
+	public static void setBid(iPinochleState bid) {
+		Bid = bid;
+	}
+
+	public static iPinochleState getTrump() {
+		return Trump;
+	}
+
+	public static void setTrump(iPinochleState trump) {
+		Trump = trump;
+	}
+
+	public static iPinochleState getPass() {
+		return Pass;
+	}
+
+	public static void setPass(iPinochleState pass) {
+		Pass = pass;
+	}
+
+	public static iPinochleState getMeld() {
+		return Meld;
+	}
+
+	public static void setMeld(iPinochleState meld) {
+		Meld = meld;
+	}
+
+	public static iPinochleState getPause() {
+		return Pause;
+	}
+
+	public static void setPause(iPinochleState pause) {
+		Pause = pause;
+	}
+
+	public static iPinochleState getGameover() {
+		return Gameover;
+	}
+
+	public static void setGameover(iPinochleState gameover) {
+		Gameover = gameover;
+	}
+
+	public static iPinochleState getRound() {
+		return Round;
+	}
+
+	public static void setRound(iPinochleState round) {
+		Round = round;
 	}
 }
