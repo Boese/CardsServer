@@ -2,8 +2,6 @@ package com.cards.server;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-
 import org.json.JSONObject;
 
 import com.cards.games.Game;
@@ -34,7 +32,9 @@ public class GameManager {
 			Game game = games.get(key);
 			games.remove(key);
 			System.out.println(game.getGameType() + " game removed. Number of games : " + games.size());
-		} catch(Exception e) {}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	// **Create/Join Games**
@@ -48,10 +48,9 @@ public class GameManager {
 		}
 		
 		if(game != null) {
-			String key = UUID.randomUUID().toString();
-			games.put(key, game);
+			games.put(game.getGameId(), game);
 			game.addUser(user);
-			user.setGame_id(key);
+			user.setGame_id(game.getGameId());
 			System.out.println("User " + user.getPort() + " joined new game of " + game.getGameType());
 			System.out.println(game.getGameType() + " game added. Number of games : " + games.size());
 		}
@@ -89,6 +88,7 @@ public class GameManager {
 	
 	public void removeUserFromGame(User user) {
 		try {
+			System.out.println("User " + user.getPort() + " quit game of " + games.get(user.getGame_id()).getGameType());
 			games.get(user.getGame_id()).removeUser(user);
 		} catch(Exception e) {}
 	}

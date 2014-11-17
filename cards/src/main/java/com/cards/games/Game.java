@@ -10,9 +10,9 @@ import com.cards.server.GameManager;
 import com.cards.server.User;
 
 public abstract class Game {
-	private static final String game_id = UUID.randomUUID().toString();
-	private static Map<String,User> players = new HashMap<String,User>();
-	private static int REQUEST_TIMEOUT = 30*1000;
+	private final String game_id = UUID.randomUUID().toString();
+	private Map<String,User> players = new HashMap<String,User>();
+	private int REQUEST_TIMEOUT = 30*1000;
 	
 	// Must implement Play (Move from player)
 	public abstract void Play(JSONObject response);
@@ -47,12 +47,12 @@ public abstract class Game {
 	
 	// Notify Game is over
 	public void gameOver() {
-		GameManager.getInstance().removeGame(Game.game_id);
+		GameManager.getInstance().removeGame(game_id);
 	}
 	
 	// Get Game ID
 	public String getGameId() {
-		return Game.game_id;
+		return game_id;
 	}
 	
 	// Add User
@@ -66,11 +66,14 @@ public abstract class Game {
 		String key = getKeyFromUser(user);
 		players.remove(key);
 		removePlayer(key);
+		if(players.size() == 0) {
+			GameManager.getInstance().removeGame(game_id);
+		}
 	}
 	
 	// Set Request Timeout
 	public void setRequestTimeout(int timeout) {
-		Game.REQUEST_TIMEOUT = timeout;
+		REQUEST_TIMEOUT = timeout;
 	}
 	
 	private String getKeyFromUser(User user) {
