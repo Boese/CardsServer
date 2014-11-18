@@ -18,7 +18,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 
 public class UserRouter {
-	private static final int LOGIN_TIMEOUT = 60*5*1000;
+	private static final int LOGIN_TIMEOUT = 5*60*1000;
 	private String salt;
 	private MessageTransformer msgTransformer;
 	private ParamValidator paramValidator;
@@ -89,7 +89,7 @@ public class UserRouter {
 	
 	// Send random salt to user on connect
 	private void SendSalt(User user) {
-		salt = BCrypt.gensalt(12);
+		salt = BCrypt.gensalt();
 		user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("salt",salt)));
 		user.setUserState(UserState.Login);
 		user.scheduleTimeoutEvent(LOGIN_TIMEOUT);
@@ -105,8 +105,8 @@ public class UserRouter {
 		try {
 			if(!(paramValidator.validate(request.getUser_name(), "username") && 
 					paramValidator.validate(request.getEmail(), "email"))) {
-				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_account","Invalid username or email")));
-				throw new Exception();
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response","Invalid username or email")));
+				return;
 			}
 			// Check if username or email is already taken
 			if(!coll.find(new BasicDBObject("user_name", request.getUser_name())).hasNext()) {
@@ -118,44 +118,60 @@ public class UserRouter {
 		        	.append("hash_password", request.getHash_password());
 				coll.insert(doc);
 				
-				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_account", "success")));
-				SendSalt(user);
+				user.setUserState(UserState.Lobby);
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_success", "account created")));
+				sendUUID(user);
+				System.out.println("User " + user.getPort() + " created account & authenticated");
 				} else {
-					user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_account", "Email already taken")));
+					user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response", "Email already taken")));
 				}
 			} else {
-				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("create_account", "Username already taken")));
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response", "Username already taken")));
 			}
 			
-		}catch(Exception e) {}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void ForgotPassword(LoginPacket request, DBCollection coll, User user) {
 		try {
 			// Check that given username and email match a record in DB
 			DBCursor cursor = coll.find(new BasicDBObject("user_name", request.getUser_name()));
-			if(request.getEmail().equalsIgnoreCase(((BasicDBObject) cursor.next()).getString("email")))
-				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("forgot_password", "success")));
-			else
-				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("forgot_password", "Invalid username or email")));
-		} catch (Exception e) {}
+			if(cursor.hasNext()) {
+				if(request.getEmail().equalsIgnoreCase(((BasicDBObject) cursor.next()).getString("email")))
+					user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response", "success")));
+				else
+					user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response", "Invalid username or email")));
+			} else
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response", "Invalid username or email")));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void Login(LoginPacket request, DBCollection coll, User user) {
 		try {
 			// Use cursor to find query -> password
 			DBCursor cursor = coll.find(new BasicDBObject("user_name", request.getUser_name()));
-			String salted_hash_password = BCrypt.hashpw(((BasicDBObject) cursor.next()).getString("hash_password"), salt);
 			
-			// Check that an unencrypted password matches one that has
-			// previously been hashed
-			if (request.getHash_password().equals(salted_hash_password)) {
-				user.setUserState(UserState.Lobby);
-				sendUUID(user);
-			}
-			else {
-				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("login", "Invalid username or email")));
-			}
-		} catch (Exception e) {}
+			if(cursor.hasNext()) {
+				String salted_hash_password = BCrypt.hashpw(((BasicDBObject) cursor.next()).getString("hash_password"), salt);
+				
+				// Check that an unencrypted password matches one that has
+				// previously been hashed
+				if (request.getHash_password().equals(salted_hash_password)) {
+					user.setUserState(UserState.Lobby);
+					sendUUID(user);
+					System.out.println("User " + user.getPort() + " authenticated");
+				}
+				else {
+					user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response", "Invalid username or password")));
+				}
+			} else
+				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket("response", "Invalid username or password")));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

@@ -41,6 +41,7 @@ public class User implements SocketObserver {
 
 	@Override
 	public void packetReceived(NIOSocket socket, byte[] packet) {
+		System.out.println("message received from user " + this.getPort() + " : " + new String(packet));
 		router.routeUser(this, new String(packet));
 	}
 
@@ -50,6 +51,7 @@ public class User implements SocketObserver {
 	
 	public void sendMessage(String message) {
 		socket.write(message.getBytes());
+		System.out.println("message sent to user " + this.port + " : " + message);
 	}
 	
 	public void scheduleTimeoutEvent(int TIMEOUT)

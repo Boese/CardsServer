@@ -20,7 +20,8 @@ public class Server implements ServerSocketObserver {
 	private static SSLEngine engine;
 	private static NIOServerSocket serversocket;
 	private static int port = 5217;
-	private static InetSocketAddress address = new InetSocketAddress("localhost",port);
+	private static String ip = "localhost";
+	private static InetSocketAddress address = new InetSocketAddress(ip,port);
 	
 	public Server() {
 		try{
@@ -29,7 +30,8 @@ public class Server implements ServerSocketObserver {
 			//SSLEngine for encrypted communications
 		engine = SSLContext.getDefault().createSSLEngine();
 			//Start Server on specified InetSocketAddress
-		serversocket = eventmachine.getNIOService().openServerSocket(address,0);
+		serversocket = eventmachine.getNIOService().openServerSocket(address,port);
+		//serversocket = eventmachine.getNIOService().openServerSocket(port);
 			//Start listening for sockets
 		serversocket.listen(this);
 		serversocket.setConnectionAcceptor(ConnectionAcceptor.ALLOW);

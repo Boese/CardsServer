@@ -106,7 +106,7 @@ public class TestClient {
                     NIOService service = new NIOService();
 
                     // Open our socket.
-                    NIOSocket socket = service.openSocket("localhost", 5217);
+                    NIOSocket socket = service.openSocket("76.14.226.157", 5217);
 
                     // Use regular 1 byte header reader/writer
                     socket.setPacketReader(new AsciiLinePacketReader());
