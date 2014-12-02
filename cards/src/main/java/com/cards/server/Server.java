@@ -30,8 +30,8 @@ public class Server implements ServerSocketObserver {
 			//SSLEngine for encrypted communications
 		engine = SSLContext.getDefault().createSSLEngine();
 			//Start Server on specified InetSocketAddress
-		serversocket = eventmachine.getNIOService().openServerSocket(address,port);
-		//serversocket = eventmachine.getNIOService().openServerSocket(port);
+		//serversocket = eventmachine.getNIOService().openServerSocket(address,port);
+		serversocket = eventmachine.getNIOService().openServerSocket(port);
 			//Start listening for sockets
 		serversocket.listen(this);
 		serversocket.setConnectionAcceptor(ConnectionAcceptor.ALLOW);

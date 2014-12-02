@@ -3,6 +3,7 @@ package com.cards.games.pinochle.states;
 import org.json.JSONObject;
 
 import com.cards.games.pinochle.Pinochle;
+import com.cards.message.PlayerResponse;
 
 
 public class Gameover implements iPinochleState {
@@ -11,7 +12,7 @@ public class Gameover implements iPinochleState {
 		this.mP = p;
 	}
 	@Override
-	public void Play(JSONObject response) {
+	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("Game Over!");
 		mP.update();
 		mP.gameover();

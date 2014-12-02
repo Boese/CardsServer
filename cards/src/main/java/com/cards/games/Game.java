@@ -1,27 +1,26 @@
 package com.cards.games;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.json.JSONObject;
 
+import com.cards.message.PlayerResponse;
 import com.cards.server.GameManager;
 import com.cards.server.User;
+import com.cards.utils.MessageTransformer;
 
 public abstract class Game {
 	private final String game_id = UUID.randomUUID().toString();
-	private Map<String,User> players = new HashMap<String,User>();
+	private final MessageTransformer msgTransformer = new MessageTransformer();
+	private List<User> users = new ArrayList<User>();
 	private int REQUEST_TIMEOUT = 30*1000;
 	
+	//** Must Implement **//
+	
 	// Must implement Play (Move from player)
-	public abstract void Play(JSONObject response);
-	
-	// Must implement addPlayer(String player_id)
-	public abstract void addPlayer(String id);
-	
-	// Must implement removePlayer(String player_id)
-	public abstract void removePlayer(String id);
+	public abstract void Play(PlayerResponse response);
 	
 	// Must implement isGameFull()
 	public abstract Boolean isGameFull();
@@ -32,17 +31,22 @@ public abstract class Game {
 	// Must implement isCurrentTurn(String player_id)
 	public abstract Boolean isCurrentTurn(String id);
 	
+	// Must implement player added()
+	public abstract void addPlayer(String id);
+	
+	// Must implement player removed()
+	public abstract void removePlayer(String id);
+	
+	// Must implement getGameMessage(String id)
+	public abstract GameMessage getGameMessage(String id);
+	
+	//** Implemented **//
+	
 	// Broadcast updated game
-	public void update(String id, String gameobject) {
-		User user = players.get(id);
-		user.sendMessage(gameobject);
-	}
-		
-	// Request Move from player
-	public void sendRequest(String id,String request) {
-		User user = players.get(id);
-		user.scheduleTimeoutEvent(REQUEST_TIMEOUT);
-		user.sendMessage(request);
+	public void update() {
+		for(User user : users) {
+			user.sendMessage(msgTransformer.writeMessage(getGameMessage(user.getSession_id())));
+		}
 	}
 	
 	// Notify Game is over
@@ -57,33 +61,28 @@ public abstract class Game {
 	
 	// Add User
 	public void addUser(User user) {
-		players.put(user.getSession_id(), user);
+		users.add(user);
 		addPlayer(user.getSession_id());
 	}
 	
 	// Remove User
 	public void removeUser(User user) {
-		String key = getKeyFromUser(user);
-		players.remove(key);
-		removePlayer(key);
-		if(players.size() == 0) {
-			GameManager.getInstance().removeGame(game_id);
-		}
+		users.remove(user);
+		removePlayer(user.getSession_id());
+		if(users.size() == 0)
+			gameOver();
 	}
 	
-	// Set Request Timeout
-	public void setRequestTimeout(int timeout) {
-		REQUEST_TIMEOUT = timeout;
+	// Get User from Player id
+	public User getUser(String id) {
+		for (User user : users) {
+			if(user.getSession_id().equals(id))
+				return user;
+		}
+		return null;
 	}
 	
-	private String getKeyFromUser(User user) {
-		String key = null;
-		for (Map.Entry<String,User> player : players.entrySet()) {
-			if(player.getValue().equals(user)) {
-				key = player.getKey();
-				break;
-			}
-		}
-		return key;
+	public int getNumPlayers() {
+		return users.size();
 	}
 }

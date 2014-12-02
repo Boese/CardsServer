@@ -1,8 +1,7 @@
 package com.cards.games.pinochle.states;
 
-import org.json.JSONObject;
-
 import com.cards.games.pinochle.Pinochle;
+import com.cards.message.PlayerResponse;
 
 
 /*
@@ -14,7 +13,7 @@ public class Start implements iPinochleState {
 		this.mP = p;
 	}
 	@Override
-	public void Play(JSONObject response) {
+	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("Starting Game!");
 		mP.update();
 		mP.setState(Pinochle.getDeal());

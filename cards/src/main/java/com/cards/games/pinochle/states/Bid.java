@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Request;
-import com.cards.games.pinochle.player.PlayerResponse;
+import com.cards.message.PlayerResponse;
 
 
 public class Bid implements iPinochleState{
@@ -24,13 +24,10 @@ public class Bid implements iPinochleState{
 		this.lastBidder = mP.getCurrentTurn();
 	}
 	@Override
-	public void Play(JSONObject response) {
+	public void Play(PlayerResponse response) {
 		try {
 			// Try to get bid from JSONObject
-			PlayerResponse playerresponse = new PlayerResponse();
-			playerresponse = mP.getMapper().readValue(response.toString(), PlayerResponse.class);
-			
-			int bid = playerresponse.getBid();
+			int bid = response.getBid();
 			
 			// If bid == 0, player passes. Notify and remove player from bidders. Increment turn.
 			if(bid == 0) {

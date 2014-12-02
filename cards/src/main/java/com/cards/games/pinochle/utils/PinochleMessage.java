@@ -2,17 +2,16 @@ package com.cards.games.pinochle.utils;
 
 import java.util.List;
 
+import com.cards.games.GameMessage;
 import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Card;
 import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Request;
-import com.cards.games.pinochle.player.Player;
+import com.cards.games.pinochle.player.PinochlePlayer;
 import com.cards.games.pinochle.states.iPinochleState;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
-public class PinochleMessage {
+public class PinochleMessage implements GameMessage {
 	int team1Score;
 	int team2Score;
 	Position currentTurn;
@@ -34,25 +33,14 @@ public class PinochleMessage {
 		currentMessage = pin.getCurrentMessage();
 	}
 	
-	public String update(Player pl) {
+	public void update(PinochlePlayer pl) {
 		cards = pl.getCurrentCards();
 		myPosition = pl.getPosition();
 		if(myPosition == currentTurn)
 			myTurn = true;
 		else
 			myTurn = false;
-		
-		ObjectMapper mapper = new ObjectMapper();
-		String result = "";
-		
-		try {
-			result = mapper.writeValueAsString(this);
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return result;
+		pl.setGame_message(this);
 	}
 
 	public int getTeam1Score() {

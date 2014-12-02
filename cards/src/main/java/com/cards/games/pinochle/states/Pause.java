@@ -1,8 +1,7 @@
 package com.cards.games.pinochle.states;
 
-import org.json.JSONObject;
-
 import com.cards.games.pinochle.Pinochle;
+import com.cards.message.PlayerResponse;
 
 
 public class Pause implements iPinochleState {
@@ -14,7 +13,7 @@ public class Pause implements iPinochleState {
 		gameHasStarted = false;
 	}
 	@Override
-	public void Play(JSONObject response) {
+	public void Play(PlayerResponse response) {
 		if(mP.isGameFull()) {
 			gameHasStarted = true;
 			mP.setCurrentMessage("Game is about to start...");

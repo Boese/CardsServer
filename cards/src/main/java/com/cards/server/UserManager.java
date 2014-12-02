@@ -48,4 +48,10 @@ public class UserManager {
 			e.printStackTrace();
 		}
 	}
+	
+	public void broadcast(String message) {
+		for (User user : users) {
+			user.sendMessage(message);
+		}
+	}
 }

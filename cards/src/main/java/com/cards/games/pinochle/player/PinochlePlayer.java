@@ -7,6 +7,7 @@ import java.util.ListIterator;
 
 import org.json.JSONObject;
 
+import com.cards.games.Player;
 import com.cards.games.pinochle.enums.Card;
 import com.cards.games.pinochle.enums.CardComparator;
 import com.cards.games.pinochle.enums.Face;
@@ -14,7 +15,7 @@ import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Suit;
 import com.cards.games.pinochle.utils.CalculateMeld;
 
-public class Player {
+public class PinochlePlayer extends Player {
 	private Position position; // enum position
 	private int team; //team 1 or team 2
 	private List<Card> currentCards; //current cards List<enum cards>
@@ -22,7 +23,8 @@ public class Player {
 	private JSONObject currentJSON;
 	private String id;
 	
-	public Player(Position position, int team, String id) {
+	public PinochlePlayer(Position position, int team, String id) {
+		super(id);
 		this.position=position;
 		this.teamMate = position.getNext(2);
 		this.team = team;

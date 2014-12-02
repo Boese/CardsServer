@@ -1,4 +1,4 @@
-package com.cards.games.pinochle.player;
+package com.cards.message;
 
 import java.util.ArrayList;
 import java.util.List;

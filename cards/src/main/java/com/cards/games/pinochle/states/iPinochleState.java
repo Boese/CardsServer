@@ -1,7 +1,7 @@
 package com.cards.games.pinochle.states;
 
-import org.json.JSONObject;
+import com.cards.message.PlayerResponse;
 
 public interface iPinochleState {
-	void Play(JSONObject response);
+	void Play(PlayerResponse response);
 }

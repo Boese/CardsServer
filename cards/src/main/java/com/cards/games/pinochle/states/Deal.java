@@ -12,7 +12,8 @@ import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Card;
 import com.cards.games.pinochle.enums.Face;
 import com.cards.games.pinochle.enums.Suit;
-import com.cards.games.pinochle.player.Player;
+import com.cards.games.pinochle.player.PinochlePlayer;
+import com.cards.message.PlayerResponse;
 
 
 public class Deal implements iPinochleState {
@@ -21,7 +22,7 @@ public class Deal implements iPinochleState {
 		this.mP = p;
 	}
 	@Override
-	public void Play(JSONObject response) {
+	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("Dealing...");
 		deal();
 		mP.update();
@@ -58,7 +59,7 @@ public class Deal implements iPinochleState {
 		// Deal out 12 cards to each player
 		int from = 0;
 		int to = 12;
-		for (Player player : mP.getPlayers()) {
+		for (PinochlePlayer player : mP.getPlayers()) {
 			player.setCards(deck.subList(from, to));
 			from += 12;
 			to += 12;
@@ -67,7 +68,7 @@ public class Deal implements iPinochleState {
 	
 	private boolean checkForNines() {
 		boolean result = false;
-		for (Player p : mP.getPlayers()) {
+		for (PinochlePlayer p : mP.getPlayers()) {
 			if(p.containsFiveNinesNoMeld())
 				result = true;
 		}

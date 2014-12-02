@@ -1,11 +1,9 @@
 package com.cards.games.pinochle.states;
 
-import org.json.JSONObject;
-
 import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Request;
 import com.cards.games.pinochle.enums.Suit;
-import com.cards.games.pinochle.player.PlayerResponse;
+import com.cards.message.PlayerResponse;
 
 
 public class Trump implements iPinochleState {
@@ -14,11 +12,9 @@ public class Trump implements iPinochleState {
 		this.mP = p;
 	}
 	@Override
-	public void Play(JSONObject response) {
+	public void Play(PlayerResponse response) {
 		try {
-			PlayerResponse playerresponse = new PlayerResponse();
-			playerresponse = mP.getMapper().readValue(response.toString(), PlayerResponse.class);
-			Suit move = playerresponse.getTrump();
+			Suit move = response.getTrump();
 			
 			mP.setCurrentTrump(move);
 			mP.setCurrentMessage(mP.getCurrentTurn() + " selected " + mP.getCurrentTrump() + " as trump!");

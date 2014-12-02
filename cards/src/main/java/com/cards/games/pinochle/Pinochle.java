@@ -6,10 +6,12 @@ import java.util.List;
 import org.json.JSONObject;
 
 import com.cards.games.Game;
+import com.cards.games.GameMessage;
+import com.cards.games.Player;
 import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Request;
 import com.cards.games.pinochle.enums.Suit;
-import com.cards.games.pinochle.player.Player;
+import com.cards.games.pinochle.player.PinochlePlayer;
 import com.cards.games.pinochle.states.Bid;
 import com.cards.games.pinochle.states.Deal;
 import com.cards.games.pinochle.states.Gameover;
@@ -22,13 +24,14 @@ import com.cards.games.pinochle.states.Trump;
 import com.cards.games.pinochle.states.iPinochleState;
 import com.cards.games.pinochle.utils.GameStateObserver;
 import com.cards.games.pinochle.utils.PinochleMessage;
+import com.cards.message.PlayerResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Pinochle extends Game{
 	private static final String GAME_TYPE = "Pinochle";
 	
 	//** Class Variables
-	List<Player> players;
+	List<PinochlePlayer> players;
 	int team1Score = 0;
 	int team2Score = 0;
 	Position currentTurn;
@@ -58,7 +61,7 @@ public class Pinochle extends Game{
 	ObjectMapper mapper;
 	
 	public Pinochle() {
-		players = new ArrayList<Player>(4);
+		players = new ArrayList<PinochlePlayer>(4);
 		currentTurn = Position.North;
 		currentTrump = null;
 		currentRequest = Request.Null;
@@ -80,14 +83,9 @@ public class Pinochle extends Game{
 		mapper = new ObjectMapper();
 	}
 	
-	// Set current state
-	public void setState(final iPinochleState state) {
-		this.currentState = state;
-	}
-	
 	//** Play function will call current state Play()
 	@Override
-	public void Play(JSONObject response) {
+	public void Play(PlayerResponse response) {
 		if(!isGameFull())
 			setState(Pause);
 		currentState.Play(response);
@@ -110,44 +108,19 @@ public class Pinochle extends Game{
 	@Override
 	public Boolean isCurrentTurn(String id) {
 		Boolean turn = false;
-		Player p = getPlayer(currentTurn);
+		PinochlePlayer p = getPlayer(currentTurn);
 		if(p.getId().equals(id))
 			turn = true;
 		return turn;
 	}
 	
-	// Broadcast updated game call super
-	public void update() {
-		PinochleMessage pinMessage = new PinochleMessage(this);
-		for(Player p : players)
-			super.update(p.getId(),pinMessage.update(p));
-	}
-	
-	// Request Move from player call super
-	public void update(Request request) {
-		setCurrentRequest(request);
-		PinochleMessage pinMessage = new PinochleMessage(this);
-		Player p = getPlayer(currentTurn);
-		super.sendRequest(p.getId(), pinMessage.update(p));
-		currentRequest = Request.Null;
-	}
-	
-	// Notify Game is over call super
-	public void gameover() {
-		super.gameOver();
-	}
-		
-	// Helper methods
-	private Position findNextAvailablePosition() {
-		List<Position> availPositions = new ArrayList<Position>();
-		availPositions.add(Position.North);
-		availPositions.add(Position.East);
-		availPositions.add(Position.South);
-		availPositions.add(Position.West);
-		for (Player player : players) {
-			availPositions.remove(player.getPosition());
+	@Override
+	public GameMessage getGameMessage(String id) {
+		for (PinochlePlayer	player : players) {
+			if(id.equals(player.getId()))
+				return player.getGame_message();
 		}
-		return availPositions.get(0);
+		return null;
 	}
 		
 	@Override
@@ -156,7 +129,7 @@ public class Pinochle extends Game{
 		int teamNum = 1;
 		if(position.equals(Position.East) || position.equals(Position.West))
 			teamNum = 2;
-		Player p = new Player(position,teamNum,id);
+		PinochlePlayer p = new PinochlePlayer(position,teamNum,id);
 		if(players.size() <= 3) {
 			players.add(p);
 			currentMessage = "**WELCOME TO PINOCHLE**";
@@ -166,7 +139,7 @@ public class Pinochle extends Game{
 		
 	@Override
 	public void removePlayer(String id) {
-		for (Player player : players) {
+		for (PinochlePlayer player : players) {
 			if(player.getId().equalsIgnoreCase(id)) {
 				players.remove(player);
 				currentRequest = Request.Null;
@@ -176,19 +149,53 @@ public class Pinochle extends Game{
 			}
 		}
 	}
+	
+	// Set current state
+	public void setState(final iPinochleState state) {
+		this.currentState = state;
+	}
+	
+	// Broadcast updated game call super
+	public void update(Request request) {
+		setCurrentRequest(request);
+		PinochleMessage pinMessage = new PinochleMessage(this);
+		for (PinochlePlayer player : players) {
+			pinMessage.update(player);
+		}
+		super.update();
+		currentRequest = Request.Null;
+	}
+	
+	// Notify Game is over call super
+	public void gameover() {
+		super.gameOver();
+	}
+	
+	// Helper methods
+	private Position findNextAvailablePosition() {
+		List<Position> availPositions = new ArrayList<Position>();
+		availPositions.add(Position.North);
+		availPositions.add(Position.East);
+		availPositions.add(Position.South);
+		availPositions.add(Position.West);
+		for (PinochlePlayer player : players) {
+			availPositions.remove(player.getPosition());
+		}
+		return availPositions.get(0);
+	}
 		
-	public Player getPlayer(Position position) {
-		Player tempPlayer = null;
-		for (Player player : players) {
+	public PinochlePlayer getPlayer(Position position) {
+		PinochlePlayer tempPlayer = null;
+		for (PinochlePlayer player : players) {
 			if(player.getPosition() == position)
 				tempPlayer = player;
 		}
 		return tempPlayer;
 	}
 	
-	public Player getPlayer(String id) {
-		Player tempPlayer = null;
-		for (Player player : players) {
+	public PinochlePlayer getPlayer(String id) {
+		PinochlePlayer tempPlayer = null;
+		for (PinochlePlayer player : players) {
 			if(player.getId().equalsIgnoreCase(id))
 				tempPlayer = player;
 		}
@@ -197,19 +204,15 @@ public class Pinochle extends Game{
 		
 	public Position getPosition(String id) {
 		Position tempPosition = null;
-		for (Player player : players) {
+		for (PinochlePlayer player : players) {
 			if(player.getId().equalsIgnoreCase(id))
 				tempPosition = player.getPosition();
 		}
 		return tempPosition;
 	}
 	
-	public List<Player> getPlayers() {
+	public List<PinochlePlayer> getPlayers() {
 		return this.players;
-	}
-
-	public void setPlayers(List<Player> players) {
-		this.players = players;
 	}
 
 	public int getTeam1Score() {

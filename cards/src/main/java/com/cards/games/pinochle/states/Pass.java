@@ -2,11 +2,10 @@ package com.cards.games.pinochle.states;
 
 import java.util.List;
 
-import org.json.JSONObject;
-
 import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Card;
-import com.cards.games.pinochle.player.Player;
+import com.cards.games.pinochle.player.PinochlePlayer;
+import com.cards.message.PlayerResponse;
 
 
 public class Pass implements iPinochleState {
@@ -15,7 +14,7 @@ public class Pass implements iPinochleState {
 		this.mP = p;
 	}
 	@Override
-	public void Play(JSONObject response) {
+	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("*** PASSING CARDS ***");
 		mP.update();
 		mP.setState(Pinochle.getMeld());
@@ -23,7 +22,7 @@ public class Pass implements iPinochleState {
 	}
 	
 	@SuppressWarnings("unused")
-	private boolean passCards(Player from, Player to, List<Card> cards) {
+	private boolean passCards(PinochlePlayer from, PinochlePlayer to, List<Card> cards) {
 		boolean result = false;
 		try {
 			if(cards.size() != 4)
