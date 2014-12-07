@@ -8,12 +8,13 @@ public class App
 {
     public static void main( String[] args )
     {
-        new Server();
-        
+        try {
+    	new Server();
         Scanner scanner = new Scanner(System.in);
         scanner.nextLine();
-        System.out.println("**Server Terminated**");
         scanner.close();
+        System.out.println("**Server Terminated**");
         System.exit(0);
+        } catch(Exception e) {}
     }
 }

@@ -10,6 +10,7 @@ import com.cards.utils.MongoDbManager;
 
 import naga.ConnectionAcceptor;
 import naga.NIOServerSocket;
+import naga.NIOService;
 import naga.NIOSocket;
 import naga.ServerSocketObserver;
 import naga.eventmachine.EventMachine;
@@ -21,7 +22,10 @@ public class Server implements ServerSocketObserver {
 	private static NIOServerSocket serversocket;
 	private static int port = 5217;
 	private static String ip = "localhost";
+	private static int middlewarePort = 3000;
+	private static String middlewareip = ip;
 	private static InetSocketAddress address = new InetSocketAddress(ip,port);
+	private static WS_Server ws_server;
 	
 	public Server() {
 		try{
@@ -41,12 +45,21 @@ public class Server implements ServerSocketObserver {
 		System.out.println("listening on port " + serversocket.getPort());
 		System.out.println("--------------------------");
 		
+			//Initialize WebSocket Middleware
+		//ws_server = new WS_Server(middlewarePort);
+		InetSocketAddress address = new InetSocketAddress(middlewareip, middlewarePort);
+		ws_server = new WS_Server(address,eventmachine.getNIOService());
+		ws_server.start();
+
+		System.out.println("--------------------------");
+		
 			//Initialize UserManager
 		UserManager.getInstance().init(eventmachine);
 			//Initialize MongoDbManager
 		MongoDbManager.getInstance().init();
 			//Initialize GameManager
 		GameManager.getInstance().init();
+			
 		System.out.println("--------------------------");
 		System.out.println();
 		}catch(Exception e) {
@@ -71,5 +84,9 @@ public class Server implements ServerSocketObserver {
 	
 	public SSLEngine getEngine() {
 		return engine;
+	}
+	
+	public NIOService getService() {
+		return eventmachine.getNIOService();
 	}
 }
