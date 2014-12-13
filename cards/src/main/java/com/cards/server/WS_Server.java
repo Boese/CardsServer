@@ -57,8 +57,8 @@ public class WS_Server extends WebSocketServer {
 
 	@Override
 	public void onOpen(WebSocket arg0, ClientHandshake arg1) {
-		System.out.println("new web socket connection: " + arg1.getResourceDescriptor());
 		sockets.put(arg0, new Socket(arg0));
+		System.out.println("new web socket connection, # of websockets : " + sockets.size());
 	}
 	
 	public Socket getSocket(WebSocket ws) {
@@ -67,6 +67,7 @@ public class WS_Server extends WebSocketServer {
 	
 	public void removeSocket(WebSocket ws) {
 		sockets.remove(ws);
+		System.out.println("web socket disconnected, # of websockets : " + sockets.size());
 	}
 	
 	public void loaded() {
@@ -105,11 +106,12 @@ public class WS_Server extends WebSocketServer {
 		public void packetSent(NIOSocket arg0, Object arg1) {}
 		@Override
 		public void packetReceived(NIOSocket arg0, byte[] arg1) {
-			System.out.println("packet from server -> websocket");
+			System.out.println("packet : websocket <- tcp_socket");
 			ws.send(new String(arg1));
 		}
 		
 		public void sendMessage(String msg) {
+			System.out.println("packet : websocket -> tcp_socket");
 			this.socket.write(msg.getBytes());
 		}
 	}

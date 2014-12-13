@@ -13,7 +13,7 @@ public class Round implements iPinochleState {
 	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("Playing Round...");
 		mP.update();
-		mP.setCurrentState(Pinochle.getGameover());
+		mP.setCurrentState(mP.getGameover());
 		mP.Play(null);
 	}
 }

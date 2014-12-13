@@ -35,6 +35,7 @@ public class Bid implements iPinochleState{
 				mP.update();
 				bidTurn.remove();
 				incTurn();
+				requestBid();
 			}
 			
 			// If bid > currentBid, set currentBid = bid. Notify players. Increment turn.
@@ -43,22 +44,24 @@ public class Bid implements iPinochleState{
 				mP.setCurrentMessage("Bid from player " + mP.getCurrentTurn() + " : " + currentBid);
 				mP.update();
 				incTurn();
+				requestBid();
 			}
 			
 			// Check if there is one bidder left and at least one bid
 			if(bidders.size() == 1 && currentBid != 0) {
 				lastBidder = lastBidder.getNext(1);
 				mP.setCurrentTurn(bidders.get(0));
-				mP.setState(Pinochle.getTrump());
+				mP.setState(mP.getTrump());
 				mP.setCurrentMessage("Player " + mP.getCurrentTurn() + " won bid at " + currentBid + ", Selecting Trump...");
 				mP.update();
+				mP.setCurrentRequest(Request.Trump);
 				mP.Play(null);
 			}
 			// Check if everyone passed
 			else if(bidders.size() == 0) {
 				lastBidder = lastBidder.getNext(1);
 				mP.setCurrentTurn(lastBidder);
-				mP.setState(Pinochle.getDeal());
+				mP.setState(mP.getDeal());
 				mP.setCurrentMessage("Everyone passed! Redeal...");
 				mP.update();
 				mP.Play(null);
@@ -75,7 +78,8 @@ public class Bid implements iPinochleState{
 	}
 	
 	private void requestBid() {
-		mP.update(Request.Bid);
+		mP.setCurrentRequest(Request.Bid);
+		mP.update();
 	}
 	
 	private void incTurn() {

@@ -20,9 +20,9 @@ public class Server implements ServerSocketObserver {
 	private static EventMachine eventmachine;
 	private static SSLEngine engine;
 	private static NIOServerSocket serversocket;
-	private static int port = 5217;
+	private static int port = 5218;
 	private static String ip = "localhost";
-	private static int middlewarePort = 3000;
+	private static int middlewarePort = 5217;
 	private static String middlewareip = ip;
 	private static InetSocketAddress address = new InetSocketAddress(ip,port);
 	private static WS_Server ws_server;
@@ -35,7 +35,7 @@ public class Server implements ServerSocketObserver {
 		engine = SSLContext.getDefault().createSSLEngine();
 			//Start Server on specified InetSocketAddress
 		//serversocket = eventmachine.getNIOService().openServerSocket(address,port);
-		serversocket = eventmachine.getNIOService().openServerSocket(port);
+		serversocket = eventmachine.getNIOService().openServerSocket(5217);
 			//Start listening for sockets
 		serversocket.listen(this);
 		serversocket.setConnectionAcceptor(ConnectionAcceptor.ALLOW);
@@ -48,7 +48,7 @@ public class Server implements ServerSocketObserver {
 			//Initialize WebSocket Middleware
 		//ws_server = new WS_Server(middlewarePort);
 		InetSocketAddress address = new InetSocketAddress(middlewareip, middlewarePort);
-		ws_server = new WS_Server(address,eventmachine.getNIOService());
+		ws_server = new WS_Server(5218,eventmachine.getNIOService());
 		ws_server.start();
 
 		System.out.println("--------------------------");

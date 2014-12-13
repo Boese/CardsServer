@@ -13,7 +13,7 @@ public class Meld implements iPinochleState {
 	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("Melding Cards...");
 		mP.update();
-		mP.setState(Pinochle.getRound());
+		mP.setState(mP.getRound());
 		mP.Play(null);
 	}
 	

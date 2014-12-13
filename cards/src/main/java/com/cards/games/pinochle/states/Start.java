@@ -1,5 +1,8 @@
 package com.cards.games.pinochle.states;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import com.cards.games.pinochle.Pinochle;
 import com.cards.message.PlayerResponse;
 
@@ -16,7 +19,13 @@ public class Start implements iPinochleState {
 	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("Starting Game!");
 		mP.update();
-		mP.setState(Pinochle.getDeal());
-		mP.Play(null);
+		TimerTask t = new TimerTask() {
+			@Override
+			public void run() {
+				mP.setState(mP.getDeal());
+				mP.Play(null);
+			}
+		};
+		new Timer().schedule(t, 5*1000);
 	}
 }

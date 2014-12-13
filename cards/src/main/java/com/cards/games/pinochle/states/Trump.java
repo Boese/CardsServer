@@ -19,10 +19,11 @@ public class Trump implements iPinochleState {
 			mP.setCurrentTrump(move);
 			mP.setCurrentMessage(mP.getCurrentTurn() + " selected " + mP.getCurrentTrump() + " as trump!");
 			mP.update();
-			mP.setState(Pinochle.getPass());
+			mP.setState(mP.getPass());
 			mP.Play(null);
 		} catch (Exception e) {
-			mP.update(Request.Trump);
+			mP.setCurrentRequest(Request.Trump);
+			mP.update();
 		}
 	}
 }

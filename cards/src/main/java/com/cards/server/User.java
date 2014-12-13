@@ -1,6 +1,5 @@
 package com.cards.server;
 
-import com.cards.utils.UserState;
 
 import naga.NIOSocket;
 import naga.SocketObserver;
@@ -10,9 +9,10 @@ import naga.packetwriter.AsciiLinePacketWriter;
 
 public class User implements SocketObserver {
 	private final NIOSocket socket;
+	private final int TIMEOUT = 1000*60*5; 
     private DelayedEvent disconnectEvent;
     private UserRouter router;
-    private UserState state;
+    private String user_name;
     private String session_id;
     private String game_id;
     private int port;
@@ -21,7 +21,6 @@ public class User implements SocketObserver {
     {
         this.socket = socket;
         this.setPort(socket.getPort());
-        this.state = UserState.PreLogin;
         this.router = new UserRouter();
         this.socket.setPacketReader(new AsciiLinePacketReader());
         this.socket.setPacketWriter(new AsciiLinePacketWriter());
@@ -36,12 +35,15 @@ public class User implements SocketObserver {
 
 	@Override
 	public void connectionOpened(NIOSocket socket) {
-		router.routeUser(this, null);
+		scheduleTimeoutEvent(TIMEOUT);
 	}
 
 	@Override
 	public void packetReceived(NIOSocket socket, byte[] packet) {
-		System.out.println("message received from user " + this.getPort() + " : " + new String(packet));
+		if(user_name == null)
+			System.out.println("message received from user " + port + " : " + new String(packet));
+		else
+			System.out.println("message received from user " + user_name + " : " + new String(packet));
 		router.routeUser(this, new String(packet));
 	}
 
@@ -51,7 +53,14 @@ public class User implements SocketObserver {
 	
 	public void sendMessage(String message) {
 		socket.write(message.getBytes());
-		System.out.println("message sent to user " + this.port + " : " + message);
+		if(user_name == null)
+			System.out.println("message sent to user " + port + " : " + message);
+		else
+			System.out.println("message sent to user " + user_name + " : " + message);
+	}
+	
+	public void closeSocket() {
+		socket.closeAfterWrite();
 	}
 	
 	public void scheduleTimeoutEvent(int TIMEOUT)
@@ -69,14 +78,6 @@ public class User implements SocketObserver {
 	
 	public void cancelTimeoutEvent() {
 		if(disconnectEvent != null) disconnectEvent.cancel();
-	}
-	
-	public void setUserState(UserState state) {
-		this.state = state;
-	}
-	
-	public UserState getUserState() {
-		return state;
 	}
 
 	public String getGame_id() {
@@ -101,5 +102,13 @@ public class User implements SocketObserver {
 
 	public void setPort(int port) {
 		this.port = port;
+	}
+
+	public String getUser_name() {
+		return user_name;
+	}
+
+	public void setUser_name(String user_name) {
+		this.user_name = user_name;
 	}
 }

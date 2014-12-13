@@ -1,7 +1,5 @@
 package com.cards.games.pinochle.states;
 
-import org.json.JSONObject;
-
 import com.cards.games.pinochle.Pinochle;
 import com.cards.message.PlayerResponse;
 

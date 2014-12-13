@@ -1,14 +1,14 @@
 package com.cards.games.pinochle.utils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.cards.games.GameMessage;
-import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Card;
 import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Request;
-import com.cards.games.pinochle.player.PinochlePlayer;
-import com.cards.games.pinochle.states.iPinochleState;
+import com.cards.message.PlayerResponse;
 
 
 public class PinochleMessage implements GameMessage {
@@ -16,32 +16,14 @@ public class PinochleMessage implements GameMessage {
 	int team2Score;
 	Position currentTurn;
 	Request currentRequest;
-	iPinochleState currentState;
+	String currentState;
 	String currentMessage;
 	List<Card> cards;
-	Position myPosition;
+	Map<Position,String> players;
 	Boolean myTurn;
+	PlayerResponse lastMove;
 	
 	public PinochleMessage() {}
-	
-	public PinochleMessage(Pinochle pin) {
-		team1Score = pin.getTeam1Score();
-		team2Score = pin.getTeam2Score();
-		currentTurn = pin.getCurrentTurn();
-		currentRequest = pin.getCurrentRequest();
-		currentState = pin.getCurrentState();
-		currentMessage = pin.getCurrentMessage();
-	}
-	
-	public void update(PinochlePlayer pl) {
-		cards = pl.getCurrentCards();
-		myPosition = pl.getPosition();
-		if(myPosition == currentTurn)
-			myTurn = true;
-		else
-			myTurn = false;
-		pl.setGame_message(this);
-	}
 
 	public int getTeam1Score() {
 		return team1Score;
@@ -74,6 +56,15 @@ public class PinochleMessage implements GameMessage {
 	public void setCurrentRequest(Request currentRequest) {
 		this.currentRequest = currentRequest;
 	}
+
+	public String getCurrentState() {
+		return currentState;
+	}
+
+	public void setCurrentState(String currentState) {
+		this.currentState = currentState;
+	}
+
 	public String getCurrentMessage() {
 		return currentMessage;
 	}
@@ -87,15 +78,16 @@ public class PinochleMessage implements GameMessage {
 	}
 
 	public void setCards(List<Card> cards) {
-		this.cards = cards;
+		List<Card> temp = new ArrayList<Card>(cards);
+		this.cards = temp;
 	}
 
-	public Position getMyPosition() {
-		return myPosition;
+	public Map<Position, String> getPlayers() {
+		return players;
 	}
 
-	public void setMyPosition(Position myPosition) {
-		this.myPosition = myPosition;
+	public void setPlayers(Map<Position, String> players) {
+		this.players = players;
 	}
 
 	public Boolean getMyTurn() {
@@ -104,5 +96,13 @@ public class PinochleMessage implements GameMessage {
 
 	public void setMyTurn(Boolean myTurn) {
 		this.myTurn = myTurn;
+	}
+
+	public PlayerResponse getLastMove() {
+		return lastMove;
+	}
+
+	public void setLastMove(PlayerResponse lastMove) {
+		this.lastMove = lastMove;
 	}
 }

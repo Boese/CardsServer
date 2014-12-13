@@ -4,33 +4,34 @@ package com.cards.games.pinochle.player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
-import org.json.JSONObject;
-
-import com.cards.games.Player;
+import com.cards.games.GameMessage;
+import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Card;
 import com.cards.games.pinochle.enums.CardComparator;
 import com.cards.games.pinochle.enums.Face;
 import com.cards.games.pinochle.enums.Position;
+import com.cards.games.pinochle.enums.Request;
 import com.cards.games.pinochle.enums.Suit;
 import com.cards.games.pinochle.utils.CalculateMeld;
+import com.cards.games.pinochle.utils.PinochleMessage;
+import com.cards.message.PlayerResponse;
+import com.cards.server.User;
 
-public class PinochlePlayer extends Player {
+public class PinochlePlayer {
 	private Position position; // enum position
 	private int team; //team 1 or team 2
 	private List<Card> currentCards; //current cards List<enum cards>
 	private Position teamMate;
-	private JSONObject currentJSON;
-	private String id;
+	private User user;
 	
-	public PinochlePlayer(Position position, int team, String id) {
-		super(id);
+	public PinochlePlayer(Position position, int team, User user) {
 		this.position=position;
 		this.teamMate = position.getNext(2);
 		this.team = team;
 		this.currentCards = new ArrayList<Card>();
-		this.currentJSON = new JSONObject();
-		this.setId(id);
+		this.setUser(user);
 	}
 	
 	public String toString() {
@@ -69,12 +70,20 @@ public class PinochlePlayer extends Player {
 		return returnCards;
 	}
 	
-	public void setJSON(JSONObject ob) {
-		this.currentJSON = ob;
+	public void removeCard(Card card) {
+		List<Card> temp = new ArrayList<Card>(currentCards);
+		int i = 0;
+		for (Card c : temp) {
+			if(c.equals(card))
+				break;
+			i++;
+		}
+		temp.remove(i);
+		setCards(temp);
 	}
 	
-	public JSONObject getJSON() {
-		return this.currentJSON;
+	public void addCard(Card card) {
+		currentCards.add(card);
 	}
 	
 	public List<Card> addCardsToCurrent(List<Card> cards) {
@@ -133,11 +142,11 @@ public class PinochlePlayer extends Player {
 		return false;
 	}
 
-	public String getId() {
-		return id;
+	public User getUser() {
+		return user;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setUser(User user) {
+		this.user = user;
 	}
 }

@@ -5,6 +5,8 @@ import static java.util.Arrays.asList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.json.JSONObject;
 
@@ -24,19 +26,35 @@ public class Deal implements iPinochleState {
 	@Override
 	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("Dealing...");
-		deal();
 		mP.update();
 		
-		if(!checkForNines()) {
-			((Bid) Pinochle.getBid()).startBid();
-			mP.setState(Pinochle.getBid());
-		}
-		else {
-			mP.setCurrentMessage("Re-dealing... One Player got 5 Nines and no meld!");
-			mP.update();
-		}
+		TimerTask t = new TimerTask() {
+			@Override
+			public void run() {
+				deal();
+				mP.update();
+			}
+		};
+		new Timer().schedule(t, 3*1000);
 		
-		mP.Play(null);
+		
+		TimerTask t2 = new TimerTask() {
+			@Override
+			public void run() {
+				if(!checkForNines()) {
+					//((Bid) Pinochle.getBid()).startBid();
+					//mP.setState(Pinochle.getBid());
+					mP.setState(mP.getPickCard());
+				}
+				else {
+					mP.setCurrentMessage("Re-dealing... One Player got 5 Nines and no meld!");
+					mP.update();
+				}
+				
+				mP.Play(null);
+			}
+		};
+		new Timer().schedule(t2, 3*1000);
 	}
 	
 	private void deal() {

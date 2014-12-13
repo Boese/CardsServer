@@ -17,7 +17,7 @@ public class Pass implements iPinochleState {
 	public void Play(PlayerResponse response) {
 		mP.setCurrentMessage("*** PASSING CARDS ***");
 		mP.update();
-		mP.setState(Pinochle.getMeld());
+		mP.setState(mP.getMeld());
 		mP.Play(null);
 	}
 	
