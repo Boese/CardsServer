@@ -55,8 +55,11 @@ public class LoginManager {
 				
 				user.sendMessage(msgTransformer.writeMessage(new ResponsePacket().setResponse("create_success").setMessage("account created")));
 				sendUUID(user);
-				user.scheduleTimeoutEvent(TIMEOUT);
-				System.out.println("User " + user.getPort() + " created account & authenticated");
+				String user_name = request.getUser_name();
+				user.setUser_name(user_name);
+				UserManager.getInstance().addAuthenticatedUser(user);
+				System.out.println("User " + user_name + " created account & authenticated");
+				GameManager.getInstance().sendLobbyInfo();
 				} else {
 					user.sendMessage(msgTransformer.writeMessage(new ResponsePacket().setResponse("response").setMessage("email already taken")));
 				}
@@ -100,6 +103,7 @@ public class LoginManager {
 					sendUUID(user);
 					String user_name = ob.getString("user_name");
 					user.setUser_name(user_name);
+					UserManager.getInstance().addAuthenticatedUser(user);
 					System.out.println("User " + user_name + " authenticated");
 					GameManager.getInstance().sendLobbyInfo();
 				}

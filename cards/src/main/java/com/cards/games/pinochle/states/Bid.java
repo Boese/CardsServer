@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.json.JSONObject;
-
 import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Position;
-import com.cards.games.pinochle.enums.Request;
 import com.cards.message.PlayerResponse;
 
 
@@ -28,58 +25,50 @@ public class Bid implements iPinochleState{
 		try {
 			// Try to get bid from JSONObject
 			int bid = response.getBid();
+			System.out.println("bid : " + response.getBid());
+			System.out.println("bid from : " + mP.getCurrentTurn());
 			
-			// If bid == 0, player passes. Notify and remove player from bidders. Increment turn.
+			
+			
+			// Bidder passed, remove from remaining
 			if(bid == 0) {
-				mP.setCurrentMessage("Bid from player " + mP.getCurrentTurn() + " : pass");
-				mP.update();
 				bidTurn.remove();
 				incTurn();
-				requestBid();
+				if(currentBid == 0)
+					mP.setLastMove(response);
 			}
-			
-			// If bid > currentBid, set currentBid = bid. Notify players. Increment turn.
-			else if(bid > currentBid) {
+		
+			// Bidder bid
+			if(bid > currentBid) {
 				currentBid = bid;
-				mP.setCurrentMessage("Bid from player " + mP.getCurrentTurn() + " : " + currentBid);
-				mP.update();
+				mP.setLastMove(response);
 				incTurn();
-				requestBid();
 			}
 			
-			// Check if there is one bidder left and at least one bid
-			if(bidders.size() == 1 && currentBid != 0) {
+			System.out.println("next bidder : " + mP.getCurrentTurn());
+			System.out.println("bidders remaining : " + bidders);
+			
+			// Everyone passed, Re-Deal
+			if(bidders.size() == 0) {
 				lastBidder = lastBidder.getNext(1);
-				mP.setCurrentTurn(bidders.get(0));
-				mP.setState(mP.getTrump());
-				mP.setCurrentMessage("Player " + mP.getCurrentTurn() + " won bid at " + currentBid + ", Selecting Trump...");
-				mP.update();
-				mP.setCurrentRequest(Request.Trump);
-				mP.Play(null);
-			}
-			// Check if everyone passed
-			else if(bidders.size() == 0) {
-				lastBidder = lastBidder.getNext(1);
-				mP.setCurrentTurn(lastBidder);
 				mP.setState(mP.getDeal());
-				mP.setCurrentMessage("Everyone passed! Redeal...");
-				mP.update();
 				mP.Play(null);
 			}
 			
-			// Bid not high enough
-			else
-				requestBid();
+			// Winner, go to state Trump
+			if(bidders.size() == 1 && currentBid > 0) {
+				mP.setState(mP.getTrump());
+				mP.setCurrentTurn(bidders.get(0));
+				lastBidder = lastBidder.getNext(1);
+				mP.Play(null);
+			}
+			
+			mP.updateAll();
 			
 		// Invalid response from player
 		} catch (Exception e) {
-			requestBid();
+			mP.update();
 		} 
-	}
-	
-	private void requestBid() {
-		mP.setCurrentRequest(Request.Bid);
-		mP.update();
 	}
 	
 	private void incTurn() {
@@ -93,14 +82,9 @@ public class Bid implements iPinochleState{
 	}
 	
 	public void startBid() {
-		
 		// Set current turn to last bidder. Initialize currentBid to 0.
 		mP.setCurrentTurn(lastBidder);
 		currentBid = 0;
-		
-		// Notify players that the bidding round is starting and which turn it is
-		mP.setCurrentMessage("Starting bidding round with : " + mP.getCurrentTurn());
-		mP.update();
 		
 		// Initialize bidders list with the correct order of players starting with last bidder. Set bidTurn to bidders.listIterator
 		bidders = new ArrayList<Position>();
@@ -108,5 +92,8 @@ public class Bid implements iPinochleState{
 			bidders.add(lastBidder.getNext(i));
 		bidTurn = bidders.listIterator();
 		bidTurn.next();
+		
+		// Notify Bid Round
+		mP.updateAll();
 	}
 }

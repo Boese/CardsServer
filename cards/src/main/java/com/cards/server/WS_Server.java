@@ -106,12 +106,12 @@ public class WS_Server extends WebSocketServer {
 		public void packetSent(NIOSocket arg0, Object arg1) {}
 		@Override
 		public void packetReceived(NIOSocket arg0, byte[] arg1) {
-			System.out.println("packet : websocket <- tcp_socket");
+			//System.out.println("packet : websocket <- tcp_socket");
 			ws.send(new String(arg1));
 		}
 		
 		public void sendMessage(String msg) {
-			System.out.println("packet : websocket -> tcp_socket");
+			//System.out.println("packet : websocket -> tcp_socket");
 			this.socket.write(msg.getBytes());
 		}
 	}

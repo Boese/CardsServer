@@ -40,10 +40,10 @@ public class User implements SocketObserver {
 
 	@Override
 	public void packetReceived(NIOSocket socket, byte[] packet) {
-		if(user_name == null)
-			System.out.println("message received from user " + port + " : " + new String(packet));
-		else
-			System.out.println("message received from user " + user_name + " : " + new String(packet));
+		//if(user_name == null)
+			//System.out.println("message received from user " + port + " : " + new String(packet));
+		//else
+			//System.out.println("message received from user " + user_name + " : " + new String(packet));
 		router.routeUser(this, new String(packet));
 	}
 
@@ -53,10 +53,10 @@ public class User implements SocketObserver {
 	
 	public void sendMessage(String message) {
 		socket.write(message.getBytes());
-		if(user_name == null)
-			System.out.println("message sent to user " + port + " : " + message);
-		else
-			System.out.println("message sent to user " + user_name + " : " + message);
+		//if(user_name == null)
+			//System.out.println("message sent to user " + port + " : " + message);
+		//else
+			//System.out.println("message sent to user " + user_name + " : " + message);
 	}
 	
 	public void closeSocket() {

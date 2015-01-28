@@ -18,8 +18,10 @@ public class PinochleMessage implements GameMessage {
 	Request currentRequest;
 	String currentState;
 	String currentMessage;
+	String currentTrump;
 	List<Card> cards;
 	Map<Position,String> players;
+	Map<Position,Integer> playersMeld;
 	Boolean myTurn;
 	PlayerResponse lastMove;
 	
@@ -73,6 +75,14 @@ public class PinochleMessage implements GameMessage {
 		this.currentMessage = currentMessage;
 	}
 
+	public String getCurrentTrump() {
+		return currentTrump;
+	}
+
+	public void setCurrentTrump(String currentTrump) {
+		this.currentTrump = currentTrump;
+	}
+
 	public List<Card> getCards() {
 		return cards;
 	}
@@ -88,6 +98,14 @@ public class PinochleMessage implements GameMessage {
 
 	public void setPlayers(Map<Position, String> players) {
 		this.players = players;
+	}
+
+	public Map<Position, Integer> getPlayersMeld() {
+		return playersMeld;
+	}
+
+	public void setPlayersMeld(Map<Position, Integer> playersMeld) {
+		this.playersMeld = playersMeld;
 	}
 
 	public Boolean getMyTurn() {

@@ -11,8 +11,6 @@ public class Gameover implements iPinochleState {
 	}
 	@Override
 	public void Play(PlayerResponse response) {
-		mP.setCurrentMessage("Game Over!");
-		mP.update();
 		mP.gameover();
 	}
 }

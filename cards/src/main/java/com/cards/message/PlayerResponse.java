@@ -1,9 +1,9 @@
 package com.cards.message;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.cards.games.pinochle.enums.Card;
+import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Suit;
 
 
@@ -12,10 +12,9 @@ public class PlayerResponse {
 	Suit trump;
 	List<Card> cards;
 	Card card;
+	String option;
 	
-	public PlayerResponse() {
-		cards = new ArrayList<Card>();
-	}
+	public PlayerResponse() {}
 
 	public int getBid() {
 		return bid;
@@ -47,5 +46,13 @@ public class PlayerResponse {
 
 	public void setCard(Card card) {
 		this.card = card;
+	}
+
+	public String getOption() {
+		return option;
+	}
+
+	public void setOption(String option) {
+		this.option = option;
 	}
 }

@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONObject;
-
 import com.cards.games.Game;
 import com.cards.games.guessthenumber.GuessTheNumber;
 import com.cards.games.pinochle.Pinochle;
@@ -28,7 +26,6 @@ public class GameManager {
 		games = new HashMap<String, Game>();
 		game_types = new ArrayList<String>();
 		game_types.add("pinochle");
-		game_types.add("GuessTheNumber");
 		msgTransformer = new MessageTransformer();
 		System.out.println("**Game Manager started**");
 	}

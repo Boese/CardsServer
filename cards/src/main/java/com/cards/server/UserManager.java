@@ -57,6 +57,7 @@ public class UserManager {
 		try {
 			GameManager.getInstance().removeUserFromGame(user);
 			users.remove(user);
+			authenticatedUsers.remove(user);
 			if(user.getUser_name() != null)
 				System.out.println("User " + user.getUser_name() + " disconnected");
 			else
@@ -68,7 +69,7 @@ public class UserManager {
 	}
 	
 	public void broadcast(String message) {
-		for (User user : users) {
+		for (User user : authenticatedUsers) {
 			user.sendMessage(message);
 		}
 	}

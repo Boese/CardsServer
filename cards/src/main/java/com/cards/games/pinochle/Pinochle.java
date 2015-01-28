@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import com.cards.games.Game;
-import com.cards.games.GameMessage;
 import com.cards.games.pinochle.enums.Position;
 import com.cards.games.pinochle.enums.Request;
 import com.cards.games.pinochle.enums.Suit;
@@ -19,9 +16,7 @@ import com.cards.games.pinochle.states.Gameover;
 import com.cards.games.pinochle.states.Meld;
 import com.cards.games.pinochle.states.Pass;
 import com.cards.games.pinochle.states.Pause;
-import com.cards.games.pinochle.states.PickCard;
 import com.cards.games.pinochle.states.Round;
-import com.cards.games.pinochle.states.Start;
 import com.cards.games.pinochle.states.Trump;
 import com.cards.games.pinochle.states.iPinochleState;
 import com.cards.games.pinochle.utils.GameStateObserver;
@@ -42,7 +37,6 @@ public class Pinochle extends Game{
 	Position currentTurn;
 	Suit currentTrump;
 	Request currentRequest;
-	String currentMessage;
 	PlayerResponse lastMove;
 	
 	//** iPinochleStates
@@ -72,9 +66,7 @@ public class Pinochle extends Game{
 		currentTurn = Position.North;
 		currentTrump = null;
 		currentRequest = Request.Null;
-		currentMessage = "";
 		
-		Start = new Start(this);
 		Deal = new Deal(this);
 		Bid = new Bid(this);
 		Trump = new Trump(this);
@@ -83,7 +75,6 @@ public class Pinochle extends Game{
 		Pause = new Pause(this);
 		Gameover = new Gameover(this);
 		Round = new Round(this);
-		PickCard = new PickCard(this);
 		
 		pinochleGameObservers = new ArrayList<GameStateObserver>();
 		msgTransformer = new MessageTransformer();
@@ -106,7 +97,6 @@ public class Pinochle extends Game{
 	public void Play(PlayerResponse response) {
 		if(!isGameFull())
 			setState(Pause);
-		lastMove = response;
 		currentState.Play(response);
 	}
 	
@@ -142,11 +132,9 @@ public class Pinochle extends Game{
 		PinochlePlayer p = new PinochlePlayer(position,teamNum,user);
 		if(players.size() <= 3) {
 			players.add(p);
-			currentMessage ="**Welcome to Pinochle**, " + user.getUser_name() + " just joined, waiting for " + (4-players.size()) + " more players";
-			update();
 		}
-		if(isGameFull())
-			Play(null);
+		
+		Play(null);
 	}
 		
 	@Override
@@ -155,14 +143,12 @@ public class Pinochle extends Game{
 			if(player.getUser().equals(user)) {
 				players.remove(player);
 				currentRequest = Request.Null;
-				currentMessage = "Player " + player.getUser().getUser_name() + " just quit, waiting for " + (4-players.size()) + " more players";
-				update();
 				break;
 			}
 		}
-		setState(Pause);
 		if(players.size() == 0)
 			super.removeGame();
+		Play(null);
 	}
 	
 	// Set current state
@@ -170,48 +156,39 @@ public class Pinochle extends Game{
 		this.currentState = state;
 	}
 	
-	// Broadcast updated game call super
+	// Send user game update/request
 	public void update() {
-		for (PinochlePlayer player : players) {
-			player.getUser().sendMessage(msgTransformer.writeMessage(new ResponsePacket().setResponse("game").setGame_message(getMessage(player))));
-		}
-		currentRequest = Request.Null;
+		PinochlePlayer player = getPlayer(currentTurn);
+		PinochleMessage message = player.getMessage();
+		message.setCurrentState(currentState.getClass().getSimpleName());
+		message.setLastMove(lastMove);
+		message.setCurrentTurn(currentTurn.getNext(getPlayerPositionOffset(player)));
+		player.getUser().sendMessage(msgTransformer.writeMessage(new ResponsePacket().setResponse("game").setGame_message(message)));
+		player.setMessage(new PinochleMessage());
 	}
 	
-	public GameMessage getMessage(PinochlePlayer p) {
-		PinochleMessage message = new PinochleMessage();
-		message.setTeam1Score(getTeam1Score());
-		message.setTeam2Score(getTeam2Score());
-		message.setCurrentTurn(getCurrentTurn().getNext(getPlayerPositionOffset(p)));
-		message.setCurrentRequest(getCurrentRequest());
-		message.setCurrentState(getCurrentState().getClass().getSimpleName());
-		message.setCurrentMessage(getCurrentMessage());
-		message.setCards(p.getCurrentCards());
-		message.setPlayers(getUserNamesAndPositions(p));
-		if(p.getPosition() == getCurrentTurn())
-			message.setMyTurn(true);
-		else
-			message.setMyTurn(false);
-		message.setLastMove(getLastMove());
-		return message;
+	// Send all users game update
+	public void updateAll() {
+		for (PinochlePlayer player : players) {
+			PinochleMessage message = player.getMessage();
+			message.setCurrentState(currentState.getClass().getSimpleName());
+			message.setLastMove(lastMove);
+			message.setCurrentTurn(currentTurn.getNext(getPlayerPositionOffset(player)));
+			player.getUser().sendMessage(msgTransformer.writeMessage(new ResponsePacket().setResponse("game").setGame_message(message)));
+			player.setMessage(new PinochleMessage());
+		}
 	}
 	
 	// Notify Game is over call super
 	public void gameover() {
-		TimerTask t = new TimerTask() {
-			@Override
-			public void run() {
-				setState(getGameover());
-				for (PinochlePlayer p : players) {
-					p.getUser().sendMessage(msgTransformer.writeMessage(new ResponsePacket().setResponse("gameover")));
-				}
-				Pinochle.this.gameOver();
-			}
-		};
-		new Timer().schedule(t, 3*1000);
+		setState(getGameover());
+		for (PinochlePlayer p : players) {
+			p.getUser().sendMessage(msgTransformer.writeMessage(new ResponsePacket().setResponse("gameover")));
+		}
+		Pinochle.this.gameOver();
 	}
 	
-	// Helper methods
+	// Helper Methods
 	private Position findNextAvailablePosition() {
 		List<Position> availPositions = new ArrayList<Position>();
 		availPositions.add(Position.North);
@@ -251,10 +228,7 @@ public class Pinochle extends Game{
 		return tempPosition;
 	}
 	
-	public List<PinochlePlayer> getPlayers() {
-		return this.players;
-	}
-	
+	// Create map of player positions according to their relative location
 	public Map<Position,String> getUserNamesAndPositions(PinochlePlayer p) {
 		int offset = getPlayerPositionOffset(p);
 		
@@ -275,6 +249,10 @@ public class Pinochle extends Game{
 		case West: offset = 3; break;
 		}
 		return offset;
+	}
+	
+	public List<PinochlePlayer> getPlayers() {
+		return this.players;
 	}
 
 	public int getTeam1Score() {
@@ -321,14 +299,6 @@ public class Pinochle extends Game{
 		return mapper;
 	}
 
-	public String getCurrentMessage() {
-		return currentMessage;
-	}
-
-	public void setCurrentMessage(String currentMessage) {
-		this.currentMessage = currentMessage;
-	}
-
 	public List<GameStateObserver> getPinochleGameObservers() {
 		return pinochleGameObservers;
 	}
@@ -346,7 +316,7 @@ public class Pinochle extends Game{
 		this.currentState = currentState;
 	}
 
-	public  iPinochleState getStart() {
+	public iPinochleState getStart() {
 		return Start;
 	}
 
@@ -354,7 +324,7 @@ public class Pinochle extends Game{
 		Start = start;
 	}
 
-	public  iPinochleState getDeal() {
+	public iPinochleState getDeal() {
 		return Deal;
 	}
 
@@ -362,7 +332,7 @@ public class Pinochle extends Game{
 		Deal = deal;
 	}
 
-	public  iPinochleState getBid() {
+	public   iPinochleState getBid() {
 		return Bid;
 	}
 

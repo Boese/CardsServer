@@ -1,5 +1,6 @@
 package com.cards.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MessageTransformer {
@@ -7,6 +8,7 @@ public class MessageTransformer {
 	
 	public MessageTransformer() {
 		mapper = new ObjectMapper();
+		mapper.setSerializationInclusion(Include.NON_NULL);
 	}
 	
 	public Object getMessage(String json, Class<?> clazz) {

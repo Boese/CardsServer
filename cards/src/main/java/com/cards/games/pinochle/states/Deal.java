@@ -5,16 +5,13 @@ import static java.util.Arrays.asList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.json.JSONObject;
 
 import com.cards.games.pinochle.Pinochle;
 import com.cards.games.pinochle.enums.Card;
 import com.cards.games.pinochle.enums.Face;
 import com.cards.games.pinochle.enums.Suit;
 import com.cards.games.pinochle.player.PinochlePlayer;
+import com.cards.games.pinochle.utils.PinochleMessage;
 import com.cards.message.PlayerResponse;
 
 
@@ -25,36 +22,23 @@ public class Deal implements iPinochleState {
 	}
 	@Override
 	public void Play(PlayerResponse response) {
-		mP.setCurrentMessage("Dealing...");
-		mP.update();
+		deal();
 		
-		TimerTask t = new TimerTask() {
-			@Override
-			public void run() {
-				deal();
-				mP.update();
-			}
-		};
-		new Timer().schedule(t, 3*1000);
+		// Send all Users their dealt hand
+		for (PinochlePlayer player : mP.getPlayers()) {
+			PinochleMessage message = new PinochleMessage();
+			message.setCards(player.getCurrentCards());
+			player.setMessage(message);
+		}
+		mP.updateAll();
 		
+		// Check if a user got 5 nines & no meld - redeal if true
+		if(!checkForNines()) {
+			mP.setState(mP.getBid());
+			((Bid)mP.getBid()).startBid();
+		}
 		
-		TimerTask t2 = new TimerTask() {
-			@Override
-			public void run() {
-				if(!checkForNines()) {
-					//((Bid) Pinochle.getBid()).startBid();
-					//mP.setState(Pinochle.getBid());
-					mP.setState(mP.getPickCard());
-				}
-				else {
-					mP.setCurrentMessage("Re-dealing... One Player got 5 Nines and no meld!");
-					mP.update();
-				}
-				
-				mP.Play(null);
-			}
-		};
-		new Timer().schedule(t2, 3*1000);
+		mP.Play(null);
 	}
 	
 	private void deal() {
